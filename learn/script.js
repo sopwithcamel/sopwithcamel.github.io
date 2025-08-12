@@ -52,18 +52,12 @@ const kannadaKeyboard = {
 // Game state
 let currentWord = null;
 let currentAnswer = '';
-let score = 0;
-let streak = 0;
-let totalAnswered = 0;
 let usedWords = [];
 
 // DOM elements
 const englishWordEl = document.getElementById('englishWord');
 const kannadaInputEl = document.getElementById('kannadaInput');
 const feedbackEl = document.getElementById('feedback');
-const scoreEl = document.getElementById('score');
-const streakEl = document.getElementById('streak');
-const totalEl = document.getElementById('total');
 const checkBtn = document.getElementById('checkBtn');
 const showAnswerBtn = document.getElementById('showAnswerBtn');
 const keyboardEl = document.getElementById('kannadaKeyboard');
@@ -71,10 +65,8 @@ const keyboardEl = document.getElementById('kannadaKeyboard');
 // Initialize the game
 function initGame() {
     createKeyboard();
-    loadNewWord();
     setupEventListeners();
-    updateScoreDisplay();
-    compactLayout();
+    loadNewWord();
 }
 
 // Create Kannada keyboard
@@ -106,66 +98,6 @@ function createKeyboard() {
         });
         keyboardEl.appendChild(rowEl);
     }
-// Compact layout adjustments
-function compactLayout() {
-    // Scoreboard: move to single row
-    const scoreboard = document.createElement('div');
-    scoreboard.id = 'scoreboardRow';
-    scoreboard.style.display = 'flex';
-    scoreboard.style.justifyContent = 'center';
-    scoreboard.style.alignItems = 'center';
-    scoreboard.style.gap = '16px';
-    scoreboard.style.marginBottom = '8px';
-    scoreboard.innerHTML = `
-        <span>Score: <span id="score"></span></span>
-        <span>Streak: <span id="streak"></span></span>
-        <span>Total: <span id="total"></span></span>
-    `;
-    // Replace old scoreboard
-    const oldScore = document.getElementById('score');
-    if (oldScore && oldScore.parentElement) {
-        oldScore.parentElement.parentElement.replaceWith(scoreboard);
-    }
-    // Move buttons next to text box
-    const inputRow = document.createElement('div');
-    inputRow.style.display = 'flex';
-    inputRow.style.alignItems = 'center';
-    inputRow.style.gap = '8px';
-    inputRow.style.marginBottom = '8px';
-    inputRow.appendChild(document.getElementById('kannadaInput'));
-    inputRow.appendChild(document.getElementById('checkBtn'));
-    inputRow.appendChild(document.getElementById('showAnswerBtn'));
-    // Place input row before keyboard
-    const kb = document.getElementById('kannadaKeyboard');
-    kb.parentElement.insertBefore(inputRow, kb);
-    // Compact keyboard style
-    const style = document.createElement('style');
-    style.textContent = `
-        .keyboard-row.compact-row {
-            display: flex;
-            gap: 2px;
-            margin-bottom: 2px;
-        }
-        .key {
-            flex: 1 1 0;
-            min-width: 0;
-            padding: 6px 0;
-            font-size: 1.1rem;
-            text-align: center;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background: #f9f9f9;
-            margin: 0;
-        }
-        .key.space {
-            flex: 2 1 0;
-        }
-        #scoreboardRow span {
-            font-size: 1rem;
-        }
-    `;
-    document.head.appendChild(style);
-}
 }
 
 // Create a keyboard key
@@ -293,18 +225,43 @@ function updateInputDisplay() {
 
 // Load a new word
 function loadNewWord() {
+    console.log('loadNewWord called');
+    console.log('englishWordEl:', englishWordEl);
+    console.log('vocabulary length:', vocabulary.length);
+    
     // Reset used words if all words have been used
     if (usedWords.length === vocabulary.length) {
         usedWords = [];
     }
+    // Find a word that hasn't been used (track by English word string)
+    let availableWords = vocabulary.filter(word => !usedWords.includes(word.english));
+    if (availableWords.length === 0) {
+        // All words used, reset and use all
+        availableWords = [...vocabulary];
+        usedWords = [];
+    }
+    // If only one word is available, use it
+    if (availableWords.length === 1) {
+        currentWord = availableWords[0];
+    } else {
+        // Pick a word that is not the current word
+        let filtered = availableWords.filter(word => !currentWord || word.english !== currentWord.english);
+        if (filtered.length === 0) {
+            filtered = availableWords;
+        }
+        currentWord = filtered[Math.floor(Math.random() * filtered.length)];
+    }
+    usedWords.push(currentWord.english);
     
-    // Find a word that hasn't been used
-    let availableWords = vocabulary.filter(word => !usedWords.includes(word));
-    currentWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-    usedWords.push(currentWord);
+    console.log('Selected word:', currentWord);
     
     // Update display
-    englishWordEl.textContent = currentWord.english;
+    if (englishWordEl) {
+        englishWordEl.textContent = currentWord.english;
+        console.log('Updated englishWordEl with:', currentWord.english);
+    } else {
+        console.error('englishWordEl is null!');
+    }
     currentAnswer = '';
     updateInputDisplay();
     clearFeedback();
@@ -319,20 +276,14 @@ function checkAnswer() {
     
     if (userAnswer === correctAnswer) {
         showFeedback('Correct! Well done! 🎉', 'correct');
-        score += 10 + (streak * 2);
-        streak++;
+        console.log('Setting timeout for next word...');
+        setTimeout(() => {
+            console.log('Loading next word...');
+            loadNewWord();
+        }, 2000);
     } else {
         showFeedback(`Incorrect. The correct answer is: ${correctAnswer}`, 'incorrect');
-        streak = 0;
     }
-    
-    totalAnswered++;
-    updateScoreDisplay();
-    
-    // Load next word after a delay
-    setTimeout(() => {
-        loadNewWord();
-    }, 2000);
 }
 
 // Show feedback
@@ -347,32 +298,20 @@ function clearFeedback() {
     feedbackEl.className = 'feedback';
 }
 
-// Update score display
-function updateScoreDisplay() {
-    scoreEl.textContent = score;
-    streakEl.textContent = streak;
-    totalEl.textContent = totalAnswered;
-}
-
 // Show answer
 function showAnswer() {
     if (!currentWord) return;
     showFeedback(`The answer is: ${currentWord.kannada}`, 'hint');
-    streak = 0;
-    totalAnswered++;
-    updateScoreDisplay();
+    console.log('Setting timeout for next word (show answer)...');
     setTimeout(() => {
+        console.log('Loading next word (show answer)...');
         loadNewWord();
     }, 2000);
 }
 
 // Start new game
 function newGame() {
-    score = 0;
-    streak = 0;
-    totalAnswered = 0;
     usedWords = [];
-    updateScoreDisplay();
     loadNewWord();
     clearFeedback();
 }
