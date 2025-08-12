@@ -283,6 +283,11 @@ function checkAnswer() {
         }, 2000);
     } else {
         showFeedback(`Incorrect. The correct answer is: ${correctAnswer}`, 'incorrect');
+        console.log('Setting timeout for next word (incorrect answer)...');
+        setTimeout(() => {
+            console.log('Loading next word (incorrect answer)...');
+            loadNewWord();
+        }, 2000);
     }
 }
 
