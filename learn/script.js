@@ -1,26 +1,3 @@
-// Vocabulary data from the notebook
-const vocabulary = [
-    { english: "full moon", kannada: "ಹುಣ್ಣಿಮೆ" },
-    { english: "soil", kannada: "ಮಣ್ಣು" },   
-    { english: "tears", kannada: "ಕಣ್ಣೀರು" },
-    { english: "design", kannada: "ಚಿತ್ತಾರ" },
-    { english: "encouragement", kannada: "ಉತ್ತೇಜನ" },
-    { english: "neck", kannada: "ಕುತ್ತಿಗೆ" },
-    { english: "charcoal", kannada: "ಇದ್ದಿಲು" },
-    { english: "highway", kannada: "ಹೆದ್ದಾರಿ" },
-    { english: "ragi ball", kannada: "ರಾಗಿ ಮುದ್ದೆ" },
-    { english: "situation", kannada: "ಸನ್ನಿವೇಶ" },
-    { english: "background", kannada: "ಹಿನ್ನೆಲೆ" },
-    { english: "spectacles", kannada: "ಕನ್ನಡಕ" },
-    { english: "seashell", kannada: "ಕಪ್ಪೆಚಿಪ್ಪು" },
-    { english: "pickle", kannada: "ಉಪ್ಪಿನಕಾಯಿ" },
-    { english: "clap", kannada: "ಚಪ್ಪಾಳೆ" },
-    { english: "iron", kannada: "ಕಬ್ಬಿಣ" },
-    { english: "python", kannada: "ಹೆಬ್ಬಾವು" },
-    { english: "darkness", kannada: "ಮಬ್ಬು" },
-    { english: "blacksmith", kannada: "ಕಮ್ಮಾರ" }
-];
-
 // Kannada keyboard layout
 const kannadaKeyboard = {
     vowels: [
@@ -63,7 +40,7 @@ const showAnswerBtn = document.getElementById('showAnswerBtn');
 const keyboardEl = document.getElementById('kannadaKeyboard');
 
 // Initialize the game
-function initGame() {
+async function initGame() {
     createKeyboard();
     setupEventListeners();
     loadNewWord();
@@ -141,6 +118,7 @@ function handleKeyPress(key) {
         currentAnswer += key;
         updateInputDisplay();
     }
+}
 
 // Helper to get the last half-consonant (2 code points)
 function getLastHalfConsonant(text) {
@@ -151,7 +129,6 @@ function getLastHalfConsonant(text) {
         if (isHalfConsonant(part)) return part;
     }
     return '';
-}
 }
 
 // Check if a character is a vowel
@@ -227,6 +204,17 @@ function updateInputDisplay() {
 function loadNewWord() {
     console.log('loadNewWord called');
     console.log('englishWordEl:', englishWordEl);
+    
+    // Check if vocabulary is loaded
+    if (typeof vocabulary === 'undefined' || !vocabulary || vocabulary.length === 0) {
+        console.error('Vocabulary not loaded yet!');
+        setTimeout(() => {
+            console.log('Retrying loadNewWord...');
+            loadNewWord();
+        }, 100);
+        return;
+    }
+    
     console.log('vocabulary length:', vocabulary.length);
     
     // Reset used words if all words have been used
@@ -325,7 +313,7 @@ function newGame() {
 function setupEventListeners() {
     checkBtn.addEventListener('click', checkAnswer);
     showAnswerBtn.addEventListener('click', showAnswer);
-    
+
     // Keyboard input
     kannadaInputEl.addEventListener('input', (e) => {
         currentAnswer = e.target.value;
@@ -339,7 +327,7 @@ function setupEventListeners() {
         }
     });
     
-    // Backspace key
+    // Backspace key (only for keyboard mode)
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Backspace' && document.activeElement !== kannadaInputEl) {
             const lastHalfConsonant = getLastHalfConsonant(currentAnswer);
