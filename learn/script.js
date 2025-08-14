@@ -381,6 +381,44 @@ style.textContent = `
         border-color: #e91e63;
     }
     
+    /* Remove English word box styling and reduce spacing */
+    .english-word {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 5px 0 !important;
+        margin: 5px 0 !important;
+        font-size: 2.5rem !important;
+        font-weight: bold !important;
+        color: #2c3e50 !important;
+        text-align: center !important;
+    }
+    
+    /* Reduce spacing in question area */
+    .question-area {
+        margin-bottom: 8px !important;
+        padding: 5px 0 !important;
+    }
+    
+    /* Reduce spacing in answer area */
+    .answer-area {
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+        padding: 5px 0 !important;
+    }
+    
+    /* Compact input container */
+    .input-container {
+        margin-bottom: 8px !important;
+        gap: 6px !important;
+    }
+    
+    /* Reduce input field padding */
+    #kannadaInput {
+        padding: 8px 12px !important;
+        margin: 5px 0 !important;
+    }
+    
     /* Space key styling - larger size */
     .key.space {
         background: #e8f5e8 !important;
@@ -409,6 +447,10 @@ style.textContent = `
             min-width: 80px !important;
             max-width: 100px !important;
         }
+        
+        .english-word {
+            font-size: 2.2rem !important;
+        }
     }
     
     @media (max-width: 480px) {
@@ -417,6 +459,22 @@ style.textContent = `
             max-width: 80px !important;
             font-size: 0.9rem;
         }
+        
+        .english-word {
+            font-size: 2rem !important;
+            padding: 3px 0 !important;
+            margin: 3px 0 !important;
+        }
+        
+        .question-area {
+            padding: 3px 0 !important;
+            margin-bottom: 5px !important;
+        }
+        
+        .answer-area {
+            margin-top: 5px !important;
+            margin-bottom: 5px !important;
+        }
     }
     
     @media (max-width: 360px) {
@@ -424,6 +482,10 @@ style.textContent = `
             min-width: 50px !important;
             max-width: 70px !important;
             font-size: 0.8rem;
+        }
+        
+        .english-word {
+            font-size: 1.8rem !important;
         }
     }
 `;
