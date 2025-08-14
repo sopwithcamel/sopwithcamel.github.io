@@ -41,6 +41,7 @@ const keyboardEl = document.getElementById('kannadaKeyboard');
 
 // Initialize the game
 async function initGame() {
+    document.getElementById('keyboardContainer').classList.add('compact');
     createKeyboard();
     setupEventListeners();
     loadNewWord();
@@ -49,6 +50,7 @@ async function initGame() {
 // Create Kannada keyboard
 function createKeyboard() {
     keyboardEl.innerHTML = '';
+    
     // Flatten all keys into a single array for compact layout
     const allKeys = [].concat(
         ...kannadaKeyboard.vowels,
@@ -57,8 +59,11 @@ function createKeyboard() {
         kannadaKeyboard.special,
         ['Space', '⌫']
     );
-    // Calculate keys per row for compactness (e.g., 12 per row)
-    const keysPerRow = 12;
+    
+    // Calculate optimal keys per row based on screen width
+    const keysPerRow = calculateOptimalKeysPerRow();
+    console.log(`Screen optimized: ${keysPerRow} keys per row`);
+    
     for (let i = 0; i < allKeys.length; i += keysPerRow) {
         const rowEl = document.createElement('div');
         rowEl.className = 'keyboard-row compact-row';
@@ -70,11 +75,46 @@ function createKeyboard() {
             else if (kannadaKeyboard.special.includes(keyText)) type = 'special';
             else if (keyText === 'Space') type = 'space';
             else if (keyText === '⌫') type = 'backspace';
+            
             const key = createKey(keyText, type);
             rowEl.appendChild(key);
         });
         keyboardEl.appendChild(rowEl);
     }
+}
+
+// Calculate optimal number of keys per row based on screen size
+function calculateOptimalKeysPerRow() {
+    const screenWidth = window.innerWidth;
+    const containerPadding = 10; // Approximate padding from container
+    const keyMinWidth = 35; // Minimum key width in pixels
+    const keyGap = 4; // Gap between keys
+    
+    // Calculate available width for keys
+    const availableWidth = screenWidth - (containerPadding * 2);
+    
+    // Calculate maximum keys that can fit
+    const maxKeysPerRow = Math.floor(availableWidth / (keyMinWidth + keyGap));
+    
+    // Set reasonable limits based on screen size
+    let optimalKeys;
+    
+    if (screenWidth <= 480) {
+        // Very small screens (phones in portrait)
+        optimalKeys = Math.min(maxKeysPerRow, 8);
+    } else if (screenWidth <= 768) {
+        // Small screens (phones in landscape, small tablets)
+        optimalKeys = Math.min(maxKeysPerRow, 10);
+    } else if (screenWidth <= 1024) {
+        // Medium screens (tablets, small laptops)
+        optimalKeys = Math.min(maxKeysPerRow, 12);
+    } else {
+        // Large screens (laptops, desktops)
+        optimalKeys = Math.min(maxKeysPerRow, 15);
+    }
+    
+    // Ensure minimum of 6 keys per row
+    return Math.max(optimalKeys, 6);
 }
 
 // Create a keyboard key
@@ -281,6 +321,9 @@ function newGame() {
 function setupEventListeners() {
     checkBtn.addEventListener('click', checkAnswer);
     showAnswerBtn.addEventListener('click', showAnswer);
+    
+    // Set up responsive keyboard
+    setupResponsiveKeyboard();
 
     // Keyboard input
     kannadaInputEl.addEventListener('input', (e) => {
@@ -337,8 +380,100 @@ style.textContent = `
         background: #fce4ec;
         border-color: #e91e63;
     }
+    
+    /* Space key styling - larger size */
+    .key.space {
+        background: #e8f5e8 !important;
+        border-color: #4caf50 !important;
+        font-weight: bold;
+        min-width: 80px !important;
+        max-width: 120px !important;
+        flex: 0 0 auto;
+    }
+    
+    .key.space:hover {
+        background: #4caf50 !important;
+        color: white !important;
+    }
+    
+    /* Responsive space key sizing */
+    @media (min-width: 1024px) {
+        .key.space {
+            min-width: 120px !important;
+            max-width: 150px !important;
+        }
+    }
+    
+    @media (max-width: 768px) and (min-width: 481px) {
+        .key.space {
+            min-width: 80px !important;
+            max-width: 100px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .key.space {
+            min-width: 60px !important;
+            max-width: 80px !important;
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 360px) {
+        .key.space {
+            min-width: 50px !important;
+            max-width: 70px !important;
+            font-size: 0.8rem;
+        }
+    }
 `;
 document.head.appendChild(style);
+
+// Calculate optimal keys per row based on screen width
+function calculateOptimalKeysPerRow() {
+    const screenWidth = window.innerWidth;
+    const containerPadding = 10; // Approximate padding from container
+    const keyMinWidth = 35; // Minimum key width in pixels
+    const keyGap = 4; // Gap between keys
+    
+    // Calculate available width for keys
+    const availableWidth = screenWidth - (containerPadding * 2);
+    
+    // Calculate maximum keys that can fit
+    const maxKeysPerRow = Math.floor(availableWidth / (keyMinWidth + keyGap));
+    
+    // Set reasonable limits based on screen size
+    let optimalKeys;
+    
+    if (screenWidth <= 480) {
+        // Very small screens (phones in portrait)
+        optimalKeys = Math.min(maxKeysPerRow, 8);
+    } else if (screenWidth <= 768) {
+        // Small screens (phones in landscape, small tablets)
+        optimalKeys = Math.min(maxKeysPerRow, 10);
+    } else if (screenWidth <= 1024) {
+        // Medium screens (tablets, small laptops)
+        optimalKeys = Math.min(maxKeysPerRow, 12);
+    } else {
+        // Large screens (laptops, desktops)
+        optimalKeys = Math.min(maxKeysPerRow, 15);
+    }
+    
+    // Ensure minimum of 6 keys per row
+    return Math.max(optimalKeys, 6);
+}
+
+// Add a resize listener to recreate keyboard when screen size changes
+function setupResponsiveKeyboard() {
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            console.log('Screen resized, recreating keyboard...');
+            createKeyboard();
+        }, 250); // Debounce resize events
+    });
+}
 
 // Initialize the game when the page loads
 document.addEventListener('DOMContentLoaded', initGame);

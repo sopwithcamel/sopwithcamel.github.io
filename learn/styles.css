@@ -234,6 +234,8 @@ header h2 {
     justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .key {
@@ -251,6 +253,9 @@ header h2 {
     color: #2c3e50;
     transition: all 0.2s ease;
     user-select: none;
+    min-width: 35px;
+    max-width: 50px;
+    flex: 1 1 auto;
 }
 
 .key:hover {
@@ -295,6 +300,18 @@ header h2 {
 
 .instructions {
     display: none !important;
+}
+
+/* Reduce only the side padding of the keyboard container */
+.keyboard-container {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+}
+
+/* For ultra-compact mode, remove side padding completely */
+.keyboard-container.compact {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Responsive Design */
@@ -353,17 +370,35 @@ header h2 {
 
 @media (max-width: 480px) {
     .key {
-        width: 35px;
-        height: 35px;
+        min-width: 30px;
+        max-width: 45px;
+        height: 32px;
+        font-size: 1rem;
+        padding: 2px 4px;
+    }
+}
+
+@media (max-width: 360px) {
+    .key {
+        min-width: 25px;
+        max-width: 40px;
+        height: 30px;
         font-size: 0.9rem;
+        padding: 1px 3px;
     }
-    
-    .key.space {
-        width: 120px;
-    }
-    
-    .key.backspace,
-    .key.enter {
-        width: 50px;
+}
+
+/* Ensure keyboard rows are flexible */
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    margin: 2px 0;
+}
+
+@media (max-width: 480px) {
+    .keyboard-row {
+        gap: 2px;
     }
 }
