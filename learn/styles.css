@@ -209,11 +209,11 @@ header h2 {
 }
 
 .keyboard-container {
-    background: white;
-    border-radius: 20px;
-    padding: 30px;
+    background: none; /* Remove white background */
+    border-radius: 0; /* Remove rounded corners */
+    padding: 10px 0; /* Keep only top/bottom padding, remove side padding */
     margin-bottom: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: none; /* Remove shadow */
 }
 
 .keyboard-container h3 {
@@ -312,6 +312,8 @@ header h2 {
 .keyboard-container.compact {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    padding-top: 5px !important; /* Minimal top padding */
+    padding-bottom: 15px !important; /* Minimal bottom padding */
 }
 
 /* Responsive Design */
