@@ -120,6 +120,7 @@ header h2 {
     text-align: center;
     background: #f8f9fa;
     margin-bottom: 10px;
+    color: #2c3e50 !important; /* Force black text in input */
 }
 
 #kannadaInput:focus {
@@ -250,7 +251,7 @@ header h2 {
     cursor: pointer;
     font-size: 1.2rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: #2c3e50 !important; /* Force black text */
     transition: all 0.2s ease;
     user-select: none;
     min-width: 35px;
@@ -260,13 +261,14 @@ header h2 {
 
 .key:hover {
     background: #667eea;
-    color: white;
+    color: #2c3e50 !important; /* Keep black text on hover */
     transform: translateY(-2px);
     box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
 }
 
 .key:active {
     transform: translateY(0);
+    color: #2c3e50 !important; /* Keep black text when active */
 }
 
 .key.space {
