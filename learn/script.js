@@ -289,12 +289,44 @@ function checkAnswer() {
 
 // Show feedback
 function showFeedback(message, type) {
-    feedbackEl.textContent = message;
-    feedbackEl.className = `feedback ${type}`;
+    // Remove any existing popup
+    const existingPopup = document.querySelector('.feedback-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+    
+    // Create popup element
+    const popup = document.createElement('div');
+    popup.className = `feedback-popup ${type}`;
+    popup.textContent = message;
+    
+    // Add popup to body
+    document.body.appendChild(popup);
+    
+    // Show popup with animation
+    setTimeout(() => {
+        popup.classList.add('show');
+    }, 10);
+    
+    // Auto-hide popup after 3 seconds
+    setTimeout(() => {
+        popup.classList.add('hide');
+        setTimeout(() => {
+            if (popup.parentNode) {
+                popup.parentNode.removeChild(popup);
+            }
+        }, 300);
+    }, 3000);
 }
 
 // Clear feedback
 function clearFeedback() {
+    const existingPopup = document.querySelector('.feedback-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+    
+    // Clear the original feedback element (though it won't be visible)
     feedbackEl.textContent = '';
     feedbackEl.className = 'feedback';
 }
@@ -381,6 +413,59 @@ style.textContent = `
         border-color: #e91e63;
     }
     
+    /* Hide the original feedback area to save space */
+    .feedback {
+        display: none !important;
+    }
+    
+    /* Feedback popup styles - MADE BIGGER */
+    .feedback-popup {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: white;
+        padding: 20px 35px; /* Increased from 15px 25px */
+        border-radius: 15px; /* Increased from 10px */
+        font-size: 1.4rem; /* Increased from 1.1rem */
+        font-weight: bold;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3); /* Bigger shadow */
+        z-index: 1000;
+        opacity: 0;
+        transition: all 0.3s ease;
+        max-width: 95%; /* Increased from 90% */
+        min-width: 200px; /* Added minimum width */
+        text-align: center;
+    }
+    
+    .feedback-popup.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    
+    .feedback-popup.hide {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-50px);
+    }
+    
+    .feedback-popup.correct {
+        background: #d4edda;
+        color: #155724;
+        border: 3px solid #c3e6cb; /* Thicker border */
+    }
+    
+    .feedback-popup.incorrect {
+        background: #f8d7da;
+        color: #721c24;
+        border: 3px solid #f5c6cb; /* Thicker border */
+    }
+    
+    .feedback-popup.hint {
+        background: #fff3cd;
+        color: #856404;
+        border: 3px solid #ffeaa7; /* Thicker border */
+    }
+    
     /* Remove English word box styling and reduce spacing */
     .english-word {
         background: none !important;
@@ -419,6 +504,12 @@ style.textContent = `
         margin: 5px 0 !important;
     }
     
+    /* Move keyboard container up by removing margins */
+    .keyboard-container {
+        margin-top: 0 !important;
+        margin-bottom: 20px !important;
+    }
+    
     /* Space key styling - larger size */
     .key.space {
         background: #e8f5e8 !important;
@@ -440,6 +531,13 @@ style.textContent = `
             min-width: 120px !important;
             max-width: 150px !important;
         }
+        
+        /* Bigger popup on desktop */
+        .feedback-popup {
+            padding: 25px 45px;
+            font-size: 1.6rem;
+            min-width: 250px;
+        }
     }
     
     @media (max-width: 768px) and (min-width: 481px) {
@@ -450,6 +548,13 @@ style.textContent = `
         
         .english-word {
             font-size: 2.2rem !important;
+        }
+        
+        /* Medium popup on tablets */
+        .feedback-popup {
+            font-size: 1.3rem;
+            padding: 18px 30px;
+            min-width: 180px;
         }
     }
     
@@ -475,6 +580,14 @@ style.textContent = `
             margin-top: 5px !important;
             margin-bottom: 5px !important;
         }
+        
+        /* Smaller but still prominent popup on mobile */
+        .feedback-popup {
+            font-size: 1.2rem;
+            padding: 15px 25px;
+            top: 10px;
+            min-width: 150px;
+        }
     }
     
     @media (max-width: 360px) {
@@ -486,6 +599,13 @@ style.textContent = `
         
         .english-word {
             font-size: 1.8rem !important;
+        }
+        
+        /* Compact but readable popup on very small screens */
+        .feedback-popup {
+            font-size: 1.1rem;
+            padding: 12px 20px;
+            min-width: 120px;
         }
     }
 `;
