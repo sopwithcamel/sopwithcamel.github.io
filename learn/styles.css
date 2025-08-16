@@ -44,46 +44,10 @@ header h2 {
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
-.score-board {
-    display: none !important;
-}
-
-.score-board {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 8px 15px;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    border-radius: 10px;
-    color: white;
-    font-weight: bold;
-    min-height: 40px;
-}
-
-.score-board > div {
-    text-align: center;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.score-board span {
-    display: inline;
-    font-size: 1.1rem;
-    margin-left: 3px;
-    font-weight: bold;
-}
-
 .question-area {
     text-align: center;
     margin-bottom: 8px !important;
     padding: 5px 0 !important;
-}
-
-.question {
-    font-size: 1.2rem;
-    color: #666;
-    margin-bottom: 10px;
 }
 
 /* Remove English word box styling and reduce spacing */
@@ -130,10 +94,6 @@ header h2 {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
-}
-
-.input-display {
-    display: none !important;
 }
 
 /* Hide the original feedback area to save space */
@@ -196,13 +156,6 @@ header h2 {
     flex-wrap: wrap;
 }
 
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
 .btn {
     padding: 12px 25px;
     font-size: 1.1rem;
@@ -247,28 +200,10 @@ header h2 {
     box-shadow: none;
 }
 
-.keyboard-container h3 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #2c3e50;
-    font-size: 1.5rem;
-}
-
 .keyboard {
     display: grid;
     gap: 8px;
     justify-content: center;
-}
-
-.keyboard-section {
-    margin-bottom: 20px;
-}
-
-.keyboard-section h4 {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
 }
 
 .keyboard-row {
@@ -277,8 +212,6 @@ header h2 {
     gap: 4px;
     flex-wrap: nowrap;
     margin: 2px 0;
-    margin-left: 0;
-    margin-right: 0;
 }
 
 .key {
@@ -313,16 +246,6 @@ header h2 {
     color: white !important;
 }
 
-.key.number {
-    background: #e8f5e8;
-    border-color: #4caf50;
-}
-
-.key.special {
-    background: #fff8e1;
-    border-color: #ffc107;
-}
-
 .key.half-consonant {
     background: #fce4ec;
     border-color: #e91e63;
@@ -348,28 +271,14 @@ header h2 {
     font-size: 1rem;
 }
 
-.key.enter {
-    width: 80px;
-    font-size: 0.9rem;
-}
-
 .key.vowel {
     background: #e3f2fd;
     border-color: #2196f3;
 }
 
-.key.consonant {
-    background: #f3e5f5;
-    border-color: #9c27b0;
-}
-
 .key.halant {
     background: #fff3e0;
     border-color: #ff9800;
-}
-
-.instructions {
-    display: none !important;
 }
 
 /* Responsive Design */
@@ -418,21 +327,11 @@ header h2 {
         padding: 20px;
     }
     
-    .score-board {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
     .english-word {
         font-size: 2rem;
     }
     
     .button-group {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .controls {
         flex-direction: column;
         align-items: center;
     }
@@ -452,8 +351,7 @@ header h2 {
         width: 150px;
     }
     
-    .key.backspace,
-    .key.enter {
+    .key.backspace {
         width: 60px;
     }
 }
