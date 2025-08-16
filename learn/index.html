@@ -48,18 +48,44 @@
             <p>Choose how you'd like to continue:</p>
 
             <div class="login-options">
-                <button id="googleLoginBtn" class="btn google-btn">
-                    <span class="google-icon">G</span>
-                    Continue with Google
-                </button>
+                <!-- Email/Password Form (initially hidden) -->
+                <div id="emailForm" class="email-form" style="display: none;">
+                    <div class="form-toggle">
+                        <button id="loginToggle" class="toggle-btn active">Login</button>
+                        <button id="registerToggle" class="toggle-btn">Register</button>
+                    </div>
 
-                <button id="anonymousLoginBtn" class="btn anonymous-btn">
-                    🎮 Play as Guest
-                </button>
+                    <form id="authForm">
+                        <input type="email" id="emailInput" placeholder="Enter your email" required>
+                        <input type="password" id="passwordInput" placeholder="Enter your password" required>
+                        <div id="confirmPasswordDiv" style="display: none;">
+                            <input type="password" id="confirmPasswordInput" placeholder="Confirm password">
+                        </div>
+                        <button type="submit" id="submitBtn" class="btn email-btn">Login</button>
+                    </form>
+
+                    <button id="backToOptionsBtn" class="btn-link">← Back to other options</button>
+                </div>
+
+                <!-- Main login options (initially visible) -->
+                <div id="mainOptions" class="main-options">
+                    <button id="emailLoginBtn" class="btn email-btn">
+                        📧 Email
+                    </button>
+
+                    <button id="googleLoginBtn" class="btn google-btn">
+                        <span class="google-icon">G</span>
+                        Google
+                    </button>
+
+                    <button id="anonymousLoginBtn" class="btn anonymous-btn">
+                        🎮 Guest
+                    </button>
+                </div>
             </div>
 
             <div class="login-benefits">
-                <p><strong>With Google:</strong> Save progress, track stats</p>
+                <p><strong>With Account:</strong> Save progress, track stats across devices</p>
                 <p><strong>As Guest:</strong> Play instantly, no signup needed</p>
             </div>
         </div>

@@ -1,6 +1,7 @@
 class FirebaseAuth {
     constructor() {
         this.user = null;
+        this.isRegistering = false; // Add this line
         this.userStats = {
             gamesPlayed: 0,
             correctAnswers: 0,
@@ -39,6 +40,11 @@ class FirebaseAuth {
             this.signOut = this.firebaseModules.signOut;
             this.onAuthStateChanged = this.firebaseModules.onAuthStateChanged;
             
+            // Add email/password auth functions
+            this.createUserWithEmailAndPassword = this.firebaseModules.createUserWithEmailAndPassword;
+            this.signInWithEmailAndPassword = this.firebaseModules.signInWithEmailAndPassword;
+            this.updateProfile = this.firebaseModules.updateProfile;
+            
             console.log('Firebase modules loaded successfully');
             
             // Listen for auth state changes
@@ -73,6 +79,13 @@ class FirebaseAuth {
         const anonymousBtn = document.getElementById('anonymousLoginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         
+        // New email/password elements
+        const emailLoginBtn = document.getElementById('emailLoginBtn');
+        const backToOptionsBtn = document.getElementById('backToOptionsBtn');
+        const loginToggle = document.getElementById('loginToggle');
+        const registerToggle = document.getElementById('registerToggle');
+        const authForm = document.getElementById('authForm');
+        
         if (googleBtn) {
             googleBtn.addEventListener('click', () => {
                 console.log('Google login clicked');
@@ -94,6 +107,37 @@ class FirebaseAuth {
                     console.log('Firebase not available, using local guest mode');
                     this.loginAsLocalGuest();
                 }
+            });
+        }
+        
+        if (emailLoginBtn) {
+            emailLoginBtn.addEventListener('click', () => {
+                this.showEmailForm();
+            });
+        }
+        
+        if (backToOptionsBtn) {
+            backToOptionsBtn.addEventListener('click', () => {
+                this.hideEmailForm();
+            });
+        }
+        
+        if (loginToggle) {
+            loginToggle.addEventListener('click', () => {
+                this.switchToLogin();
+            });
+        }
+        
+        if (registerToggle) {
+            registerToggle.addEventListener('click', () => {
+                this.switchToRegister();
+            });
+        }
+        
+        if (authForm) {
+            authForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleEmailAuth();
             });
         }
         
@@ -464,6 +508,211 @@ class FirebaseAuth {
     
     isAuthenticated() {
         return !!this.user;
+    }
+    
+    showEmailForm() {
+        document.getElementById('mainOptions').style.display = 'none';
+        document.getElementById('emailForm').style.display = 'block';
+        document.getElementById('emailInput').focus();
+    }
+
+    hideEmailForm() {
+        document.getElementById('emailForm').style.display = 'none';
+        document.getElementById('mainOptions').style.display = 'block';
+        this.clearFormErrors();
+    }
+
+    switchToLogin() {
+        document.getElementById('loginToggle').classList.add('active');
+        document.getElementById('registerToggle').classList.remove('active');
+        document.getElementById('confirmPasswordDiv').style.display = 'none';
+        document.getElementById('submitBtn').textContent = 'Login';
+        this.isRegistering = false;
+        this.clearFormErrors();
+    }
+
+    switchToRegister() {
+        document.getElementById('registerToggle').classList.add('active');
+        document.getElementById('loginToggle').classList.remove('active');
+        document.getElementById('confirmPasswordDiv').style.display = 'block';
+        document.getElementById('submitBtn').textContent = 'Register';
+        this.isRegistering = true;
+        this.clearFormErrors();
+    }
+
+    async handleEmailAuth() {
+        const email = document.getElementById('emailInput').value.trim();
+        const password = document.getElementById('passwordInput').value;
+        const confirmPassword = document.getElementById('confirmPasswordInput').value;
+        
+        // Clear previous errors
+        this.clearFormErrors();
+        
+        // Validation
+        if (!email || !password) {
+            this.showFormError('Please fill in all fields.');
+            return;
+        }
+        
+        if (!this.isValidEmail(email)) {
+            this.showFormError('Please enter a valid email address.');
+            return;
+        }
+        
+        if (password.length < 6) {
+            this.showFormError('Password must be at least 6 characters long.');
+            return;
+        }
+        
+        if (this.isRegistering && password !== confirmPassword) {
+            this.showFormError('Passwords do not match.');
+            return;
+        }
+        
+        try {
+            if (this.isRegistering) {
+                await this.registerWithEmail(email, password);
+            } else {
+                await this.loginWithEmail(email, password);
+            }
+        } catch (error) {
+            console.error('Email auth error:', error);
+            this.handleAuthError(error);
+        }
+    }
+
+    async registerWithEmail(email, password) {
+        try {
+            console.log('Attempting email registration...');
+            if (!this.createUserWithEmailAndPassword) {
+                throw new Error('Email registration not available - Firebase not loaded');
+            }
+            
+            const userCredential = await this.createUserWithEmailAndPassword(window.auth, email, password);
+            console.log('Registration successful:', userCredential.user.uid);
+            
+            // Optionally update display name
+            const displayName = email.split('@')[0]; // Use part before @ as display name
+            if (this.updateProfile) {
+                await this.updateProfile(userCredential.user, { displayName });
+            }
+            
+            this.showFeedback('Account created successfully! Welcome! 🎉', 'correct');
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async loginWithEmail(email, password) {
+        try {
+            console.log('Attempting email login...');
+            if (!this.signInWithEmailAndPassword) {
+                throw new Error('Email login not available - Firebase not loaded');
+            }
+            
+            const userCredential = await this.signInWithEmailAndPassword(window.auth, email, password);
+            console.log('Login successful:', userCredential.user.uid);
+            
+            this.showFeedback('Login successful! Welcome back! 🎉', 'correct');
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    handleAuthError(error) {
+        let message = 'Authentication failed. Please try again.';
+        
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                message = 'An account with this email already exists. Try logging in instead.';
+                break;
+            case 'auth/weak-password':
+                message = 'Password is too weak. Please choose a stronger password.';
+                break;
+            case 'auth/user-not-found':
+                message = 'No account found with this email. Try registering instead.';
+                break;
+            case 'auth/wrong-password':
+                message = 'Incorrect password. Please try again.';
+                break;
+            case 'auth/invalid-email':
+                message = 'Please enter a valid email address.';
+                break;
+            case 'auth/user-disabled':
+                message = 'This account has been disabled.';
+                break;
+            case 'auth/too-many-requests':
+                message = 'Too many failed attempts. Please try again later.';
+                break;
+            default:
+                message = error.message || 'Authentication failed. Please try again.';
+        }
+        
+        this.showFormError(message);
+    }
+
+    showFormError(message) {
+        // Remove existing error
+        const existingError = document.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Create new error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        
+        // Add after the form
+        const form = document.getElementById('authForm');
+        if (form) {
+            form.parentNode.insertBefore(errorDiv, form.nextSibling);
+        }
+    }
+
+    clearFormErrors() {
+        const existingError = document.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    showFeedback(message, type) {
+        // Remove any existing popup
+        const existingPopup = document.querySelector('.feedback-popup');
+        if (existingPopup) {
+            existingPopup.remove();
+        }
+        
+        // Create popup element
+        const popup = document.createElement('div');
+        popup.className = `feedback-popup ${type}`;
+        popup.textContent = message;
+        popup.style.top = '20px';
+        popup.style.zIndex = '3000';
+        
+        // Add popup to body
+        document.body.appendChild(popup);
+        
+        // Show popup with animation
+        setTimeout(() => {
+            popup.classList.add('show');
+        }, 10);
+        
+        // Auto-hide popup after 3 seconds
+        setTimeout(() => {
+            popup.classList.add('hide');
+            setTimeout(() => {
+                if (popup.parentNode) {
+                    popup.parentNode.removeChild(popup);
+                }
+            }, 300);
+        }, 3000);
     }
 }
 
