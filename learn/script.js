@@ -182,11 +182,6 @@ function isHalfConsonant(char) {
     return char && char.endsWith('್');
 }
 
-// Get the last character from the current answer
-function getLastCharacter(text) {
-    return text.slice(-1);
-}
-
 // Combine half consonant with vowel to form full consonant
 function combineHalfConsonantWithVowel(halfConsonant, vowel) {
     // Check if consonantMap is loaded from consonants.js
@@ -382,40 +377,6 @@ function setupEventListeners() {
             updateInputDisplay();
         }
     });
-}
-
-// Calculate optimal keys per row based on screen width
-function calculateOptimalKeysPerRow() {
-    const screenWidth = window.innerWidth;
-    const containerPadding = 10; // Approximate padding from container
-    const keyMinWidth = 35; // Minimum key width in pixels
-    const keyGap = 4; // Gap between keys
-    
-    // Calculate available width for keys
-    const availableWidth = screenWidth - (containerPadding * 2);
-    
-    // Calculate maximum keys that can fit
-    const maxKeysPerRow = Math.floor(availableWidth / (keyMinWidth + keyGap));
-    
-    // Set reasonable limits based on screen size
-    let optimalKeys;
-    
-    if (screenWidth <= 480) {
-        // Very small screens (phones in portrait)
-        optimalKeys = Math.min(maxKeysPerRow, 8);
-    } else if (screenWidth <= 768) {
-        // Small screens (phones in landscape, small tablets)
-        optimalKeys = Math.min(maxKeysPerRow, 10);
-    } else if (screenWidth <= 1024) {
-        // Medium screens (tablets, small laptops)
-        optimalKeys = Math.min(maxKeysPerRow, 12);
-    } else {
-        // Large screens (laptops, desktops)
-        optimalKeys = Math.min(maxKeysPerRow, 15);
-    }
-    
-    // Ensure minimum of 6 keys per row
-    return Math.max(optimalKeys, 6);
 }
 
 // Add a resize listener to recreate keyboard when screen size changes
