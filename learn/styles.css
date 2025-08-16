@@ -76,7 +76,8 @@ header h2 {
 
 .question-area {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 8px !important;
+    padding: 5px 0 !important;
 }
 
 .question {
@@ -85,42 +86,44 @@ header h2 {
     margin-bottom: 10px;
 }
 
+/* Remove English word box styling and reduce spacing */
 .english-word {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #2c3e50;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 15px;
-    border: 3px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.english-word:hover {
-    border-color: #667eea;
-    transform: translateY(-2px);
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 5px 0 !important;
+    margin: 5px 0 !important;
+    font-size: 2.5rem !important;
+    font-weight: bold !important;
+    color: #2c3e50 !important;
+    text-align: center !important;
 }
 
 .answer-area {
-    margin-bottom: 30px;
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    padding: 5px 0 !important;
     text-align: center;
 }
 
+/* Compact input container */
 .input-container {
-    margin-bottom: 15px;
+    margin-bottom: 8px !important;
+    gap: 6px !important;
 }
 
+/* Reduce input field padding */
 #kannadaInput {
     width: 100%;
     max-width: 400px;
-    padding: 15px;
+    padding: 8px 12px !important;
+    margin: 5px 0 !important;
     font-size: 1.5rem;
     border: 3px solid #ddd;
     border-radius: 10px;
     text-align: center;
     background: #f8f9fa;
-    margin-bottom: 10px;
-    color: #2c3e50 !important; /* Force black text in input */
+    color: #2c3e50 !important;
 }
 
 #kannadaInput:focus {
@@ -133,35 +136,57 @@ header h2 {
     display: none !important;
 }
 
+/* Hide the original feedback area to save space */
 .feedback {
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 15px;
-    border-radius: 10px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: none !important;
 }
 
-.feedback.correct {
+/* Feedback popup styles - MADE BIGGER */
+.feedback-popup {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: white;
+    padding: 20px 35px;
+    border-radius: 15px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 95%;
+    min-width: 200px;
+    text-align: center;
+}
+
+.feedback-popup.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.feedback-popup.hide {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-50px);
+}
+
+.feedback-popup.correct {
     background: #d4edda;
     color: #155724;
-    border: 2px solid #c3e6cb;
+    border: 3px solid #c3e6cb;
 }
 
-.feedback.incorrect {
+.feedback-popup.incorrect {
     background: #f8d7da;
     color: #721c24;
-    border: 2px solid #f5c6cb;
+    border: 3px solid #f5c6cb;
 }
 
-.feedback.hint {
+.feedback-popup.hint {
     background: #fff3cd;
     color: #856404;
-    border: 2px solid #ffeaa7;
+    border: 3px solid #ffeaa7;
 }
 
 .button-group {
@@ -209,12 +234,17 @@ header h2 {
     transform: translateY(-2px);
 }
 
+/* Move keyboard container up by removing margins */
 .keyboard-container {
-    background: none; /* Remove white background */
-    border-radius: 0; /* Remove rounded corners */
-    padding: 10px 0; /* Keep only top/bottom padding, remove side padding */
-    margin-bottom: 30px;
-    box-shadow: none; /* Remove shadow */
+    background: none;
+    border-radius: 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 5px !important;
+    padding-bottom: 15px !important;
+    margin-top: 0 !important;
+    margin-bottom: 20px !important;
+    box-shadow: none;
 }
 
 .keyboard-container h3 {
@@ -230,11 +260,23 @@ header h2 {
     justify-content: center;
 }
 
+.keyboard-section {
+    margin-bottom: 20px;
+}
+
+.keyboard-section h4 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
 .keyboard-row {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex-wrap: nowrap;
+    margin: 2px 0;
     margin-left: 0;
     margin-right: 0;
 }
@@ -251,7 +293,7 @@ header h2 {
     cursor: pointer;
     font-size: 1.2rem;
     font-weight: bold;
-    color: #2c3e50 !important; /* Force black text */
+    color: #2c3e50 !important;
     transition: all 0.2s ease;
     user-select: none;
     min-width: 35px;
@@ -261,18 +303,44 @@ header h2 {
 
 .key:hover {
     background: #667eea;
-    color: #2c3e50 !important; /* Keep black text on hover */
+    color: white !important;
     transform: translateY(-2px);
     box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
 }
 
 .key:active {
     transform: translateY(0);
-    color: #2c3e50 !important; /* Keep black text when active */
+    color: white !important;
 }
 
+.key.number {
+    background: #e8f5e8;
+    border-color: #4caf50;
+}
+
+.key.special {
+    background: #fff8e1;
+    border-color: #ffc107;
+}
+
+.key.half-consonant {
+    background: #fce4ec;
+    border-color: #e91e63;
+}
+
+/* Space key styling - larger size */
 .key.space {
-    width: 200px;
+    background: #e8f5e8 !important;
+    border-color: #4caf50 !important;
+    font-weight: bold;
+    min-width: 80px !important;
+    max-width: 120px !important;
+    flex: 0 0 auto;
+}
+
+.key.space:hover {
+    background: #4caf50 !important;
+    color: white !important;
 }
 
 .key.backspace {
@@ -304,21 +372,39 @@ header h2 {
     display: none !important;
 }
 
-/* Reduce only the side padding of the keyboard container */
-.keyboard-container {
-    padding-left: 5px !important;
-    padding-right: 5px !important;
-}
-
-/* For ultra-compact mode, remove side padding completely */
-.keyboard-container.compact {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-top: 5px !important; /* Minimal top padding */
-    padding-bottom: 15px !important; /* Minimal bottom padding */
-}
-
 /* Responsive Design */
+@media (min-width: 1024px) {
+    .key.space {
+        min-width: 120px !important;
+        max-width: 150px !important;
+    }
+    
+    /* Bigger popup on desktop */
+    .feedback-popup {
+        padding: 25px 45px;
+        font-size: 1.6rem;
+        min-width: 250px;
+    }
+}
+
+@media (max-width: 768px) and (min-width: 481px) {
+    .key.space {
+        min-width: 80px !important;
+        max-width: 100px !important;
+    }
+    
+    .english-word {
+        font-size: 2.2rem !important;
+    }
+    
+    /* Medium popup on tablets */
+    .feedback-popup {
+        font-size: 1.3rem;
+        padding: 18px 30px;
+        min-width: 180px;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 10px;
@@ -380,6 +466,40 @@ header h2 {
         font-size: 1rem;
         padding: 2px 4px;
     }
+    
+    .key.space {
+        min-width: 60px !important;
+        max-width: 80px !important;
+        font-size: 0.9rem;
+    }
+    
+    .english-word {
+        font-size: 2rem !important;
+        padding: 3px 0 !important;
+        margin: 3px 0 !important;
+    }
+    
+    .question-area {
+        padding: 3px 0 !important;
+        margin-bottom: 5px !important;
+    }
+    
+    .answer-area {
+        margin-top: 5px !important;
+        margin-bottom: 5px !important;
+    }
+    
+    .keyboard-row {
+        gap: 2px;
+    }
+    
+    /* Smaller but still prominent popup on mobile */
+    .feedback-popup {
+        font-size: 1.2rem;
+        padding: 15px 25px;
+        top: 10px;
+        min-width: 150px;
+    }
 }
 
 @media (max-width: 360px) {
@@ -390,19 +510,21 @@ header h2 {
         font-size: 0.9rem;
         padding: 1px 3px;
     }
-}
-
-/* Ensure keyboard rows are flexible */
-.keyboard-row {
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    flex-wrap: nowrap;
-    margin: 2px 0;
-}
-
-@media (max-width: 480px) {
-    .keyboard-row {
-        gap: 2px;
+    
+    .key.space {
+        min-width: 50px !important;
+        max-width: 70px !important;
+        font-size: 0.8rem;
+    }
+    
+    .english-word {
+        font-size: 1.8rem !important;
+    }
+    
+    /* Compact but readable popup on very small screens */
+    .feedback-popup {
+        font-size: 1.1rem;
+        padding: 12px 20px;
+        min-width: 120px;
     }
 }
