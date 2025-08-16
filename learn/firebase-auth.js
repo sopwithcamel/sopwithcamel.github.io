@@ -1,0 +1,474 @@
+class FirebaseAuth {
+    constructor() {
+        this.user = null;
+        this.userStats = {
+            gamesPlayed: 0,
+            correctAnswers: 0,
+            totalAnswers: 0,
+            currentStreak: 0,
+            bestStreak: 0,
+            wordsLearned: new Set()
+        };
+        
+        this.firebaseModules = null;
+        this.init();
+    }
+    
+    async init() {
+        // Wait for Firebase to be initialized
+        let attempts = 0;
+        while (!window.auth && attempts < 30) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (!window.auth) {
+            console.error('Firebase not initialized after 3 seconds - using fallback mode');
+            this.setupFallbackMode();
+            return;
+        }
+        
+        try {
+            // Import Firebase modules
+            this.firebaseModules = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+            
+            // Store references to Firebase functions
+            this.signInWithPopup = this.firebaseModules.signInWithPopup;
+            this.GoogleAuthProvider = this.firebaseModules.GoogleAuthProvider;
+            this.signInAnonymously = this.firebaseModules.signInAnonymously;
+            this.signOut = this.firebaseModules.signOut;
+            this.onAuthStateChanged = this.firebaseModules.onAuthStateChanged;
+            
+            console.log('Firebase modules loaded successfully');
+            
+            // Listen for auth state changes
+            this.onAuthStateChanged(window.auth, (user) => {
+                this.handleAuthStateChange(user);
+            });
+            
+            this.setupEventListeners();
+            
+            // Check if user is already authenticated
+            if (window.auth.currentUser) {
+                console.log('User already authenticated');
+                this.handleAuthStateChange(window.auth.currentUser);
+            } else {
+                this.showLoginModal();
+            }
+            
+        } catch (error) {
+            console.error('Error initializing Firebase modules:', error);
+            this.setupFallbackMode();
+        }
+    }
+    
+    setupFallbackMode() {
+        console.log('Setting up fallback mode without Firebase');
+        this.setupEventListeners();
+        this.showLoginModal();
+    }
+    
+    setupEventListeners() {
+        const googleBtn = document.getElementById('googleLoginBtn');
+        const anonymousBtn = document.getElementById('anonymousLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if (googleBtn) {
+            googleBtn.addEventListener('click', () => {
+                console.log('Google login clicked');
+                if (this.signInWithPopup) {
+                    this.loginWithGoogle();
+                } else {
+                    this.showError('Google login requires Firebase setup. Using guest mode instead.');
+                    this.loginAsLocalGuest();
+                }
+            });
+        }
+        
+        if (anonymousBtn) {
+            anonymousBtn.addEventListener('click', () => {
+                console.log('Anonymous login clicked');
+                if (this.signInAnonymously && window.auth) {
+                    this.loginAnonymously();
+                } else {
+                    console.log('Firebase not available, using local guest mode');
+                    this.loginAsLocalGuest();
+                }
+            });
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.logout();
+            });
+        }
+    }
+    
+    // Fallback method - pure localStorage, no Firebase
+    loginAsLocalGuest() {
+        console.log('Logging in as local guest (no Firebase)');
+        
+        // Reset stats for fresh guest session
+        this.resetStats();
+        
+        // Create a fake user object
+        this.user = {
+            uid: 'local-guest-' + Date.now(),
+            isAnonymous: true,
+            isLocalGuest: true, // Custom property to identify local guests
+            displayName: null,
+            email: null
+        };
+        
+        // Load any existing local stats (or keep reset stats for fresh start)
+        this.loadLocalStats();
+        this.hideLoginModal();
+        this.showUserBar();
+        
+        // Dispatch custom event that the main app can listen to
+        window.dispatchEvent(new CustomEvent('userAuthenticated', { 
+            detail: { user: this.user, stats: this.userStats } 
+        }));
+    }
+    
+    async loginWithGoogle() {
+        try {
+            console.log('Attempting Google login...');
+            if (!this.signInWithPopup || !this.GoogleAuthProvider) {
+                throw new Error('Firebase modules not loaded');
+            }
+            
+            const provider = new this.GoogleAuthProvider();
+            const result = await this.signInWithPopup(window.auth, provider);
+            console.log('Google login successful:', result.user.uid);
+        } catch (error) {
+            console.error('Google login failed:', error);
+            this.showError('Google login failed. Please check if popups are blocked.');
+        }
+    }
+    
+    async loginAnonymously() {
+        try {
+            console.log('Attempting Firebase anonymous login...');
+            
+            if (!this.signInAnonymously) {
+                throw new Error('Firebase signInAnonymously not loaded');
+            }
+            
+            const result = await this.signInAnonymously(window.auth);
+            console.log('Anonymous login successful:', result.user.uid);
+        } catch (error) {
+            console.error('Anonymous login failed:', error);
+            
+            if (error.code === 'auth/admin-restricted-operation') {
+                console.log('Anonymous auth disabled, falling back to local guest mode');
+                this.showError('Using local guest mode (Anonymous auth disabled in Firebase)');
+                setTimeout(() => {
+                    this.loginAsLocalGuest();
+                }, 2000);
+            } else {
+                console.log('Firebase error, falling back to local guest mode');
+                this.loginAsLocalGuest();
+            }
+        }
+    }
+    
+    async logout() {
+        try {
+            if (this.user && this.user.isLocalGuest) {
+                // Local guest logout - clear local stats
+                console.log('Logging out local guest');
+                localStorage.removeItem('kannadaLearnerStats');
+                this.resetStats();
+                this.user = null;
+                this.hideUserBar();
+                this.showLoginModal();
+                return;
+            }
+            
+            if (this.signOut && window.auth) {
+                // Firebase logout - clear local stats but keep Firestore data
+                localStorage.removeItem('kannadaLearnerStats');
+                this.resetStats();
+                await this.signOut(window.auth);
+                console.log('User logged out from Firebase');
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+            this.showError('Logout failed: ' + error.message);
+        }
+    }
+    
+    // Add a method to reset stats to initial values
+    resetStats() {
+        this.userStats = {
+            gamesPlayed: 0,
+            correctAnswers: 0,
+            totalAnswers: 0,
+            currentStreak: 0,
+            bestStreak: 0,
+            wordsLearned: new Set()
+        };
+        console.log('Stats reset to initial values');
+    }
+    
+    async handleAuthStateChange(user) {
+        console.log('Auth state changed:', user ? user.uid : 'null');
+        
+        if (user) {
+            // If switching from a different user type, reset stats first
+            if (this.user && this.user.uid !== user.uid) {
+                console.log('Switching users, resetting stats');
+                this.resetStats();
+            }
+            
+            this.user = user;
+            
+            // Only use Firestore for non-anonymous users
+            if (!user.isAnonymous) {
+                await this.loadUserStats();
+            } else {
+                console.log('Anonymous user - using local storage for stats');
+                this.loadLocalStats();
+            }
+            
+            this.hideLoginModal();
+            this.showUserBar();
+            
+            // Dispatch custom event that the main app can listen to
+            window.dispatchEvent(new CustomEvent('userAuthenticated', { 
+                detail: { user, stats: this.userStats } 
+            }));
+        } else {
+            // User logged out - reset everything
+            console.log('User logged out - resetting stats');
+            this.resetStats();
+            this.user = null;
+            this.hideUserBar();
+            this.showLoginModal();
+        }
+    }
+    
+    loadLocalStats() {
+        // For guest users, you might want fresh stats each time
+        // Comment out this method body if you want fresh stats for each guest session
+        
+        // Load stats from localStorage for anonymous users
+        const savedStats = localStorage.getItem('kannadaLearnerStats');
+        if (savedStats) {
+            try {
+                const parsed = JSON.parse(savedStats);
+                this.userStats = {
+                    ...this.userStats,
+                    ...parsed,
+                    wordsLearned: new Set(parsed.wordsLearned || [])
+                };
+                console.log('Local stats loaded:', this.userStats);
+            } catch (error) {
+                console.error('Error loading local stats:', error);
+            }
+        }
+        // If no saved stats found, keep the reset stats (fresh start)
+    }
+    
+    saveLocalStats() {
+        // Save stats to localStorage for anonymous/local users
+        if (this.user && (this.user.isAnonymous || this.user.isLocalGuest)) {
+            const statsToSave = {
+                ...this.userStats,
+                wordsLearned: Array.from(this.userStats.wordsLearned),
+                lastUpdated: new Date().toISOString()
+            };
+            localStorage.setItem('kannadaLearnerStats', JSON.stringify(statsToSave));
+            console.log('Local stats saved');
+        }
+    }
+    
+    async loadUserStats() {
+        if (!this.user || this.user.isAnonymous || this.user.isLocalGuest) {
+            return;
+        }
+        
+        if (!window.db) {
+            console.log('Firestore not available');
+            return;
+        }
+        
+        try {
+            const { doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            
+            const userDoc = await getDoc(doc(window.db, 'users', this.user.uid));
+            
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                this.userStats = {
+                    ...this.userStats,
+                    ...data,
+                    wordsLearned: new Set(data.wordsLearned || [])
+                };
+                console.log('User stats loaded from Firestore:', this.userStats);
+            } else {
+                // Create new user document
+                console.log('Creating new user document');
+                await this.saveUserStats();
+            }
+        } catch (error) {
+            console.error('Error loading user stats:', error);
+        }
+    }
+    
+    async saveUserStats() {
+        if (!this.user) return;
+        
+        // Save to localStorage for anonymous/local users
+        if (this.user.isAnonymous || this.user.isLocalGuest) {
+            this.saveLocalStats();
+            return;
+        }
+        
+        // Save to Firestore for authenticated users
+        if (!window.db) return;
+        
+        try {
+            const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            
+            const statsToSave = {
+                ...this.userStats,
+                wordsLearned: Array.from(this.userStats.wordsLearned),
+                lastUpdated: new Date().toISOString()
+            };
+            
+            await setDoc(doc(window.db, 'users', this.user.uid), statsToSave);
+            console.log('User stats saved to Firestore');
+        } catch (error) {
+            console.error('Error saving user stats:', error);
+        }
+    }
+    
+    updateStats(isCorrect, word) {
+        this.userStats.totalAnswers++;
+        
+        if (isCorrect) {
+            this.userStats.correctAnswers++;
+            this.userStats.currentStreak++;
+            this.userStats.wordsLearned.add(word);
+            
+            if (this.userStats.currentStreak > this.userStats.bestStreak) {
+                this.userStats.bestStreak = this.userStats.currentStreak;
+            }
+        } else {
+            this.userStats.currentStreak = 0;
+        }
+        
+        this.saveUserStats();
+        this.updateStatsDisplay(); // Add this line
+    }
+    
+    showLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            console.log('Login modal shown');
+        }
+    }
+    
+    hideLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'none';
+            console.log('Login modal hidden');
+        }
+    }
+    
+    showUserBar() {
+        const userBar = document.getElementById('userBar');
+        const userDisplay = document.getElementById('userDisplay');
+        
+        if (this.user && userBar && userDisplay) {
+            let displayName;
+            
+            if (this.user.isLocalGuest) {
+                displayName = '🎮 Local Guest';
+            } else if (this.user.isAnonymous) {
+                displayName = '🎮 Anonymous User';
+            } else {
+                displayName = `👋 ${this.user.displayName || this.user.email || 'User'}`;
+            }
+            
+            userDisplay.textContent = displayName;
+            this.updateStatsDisplay();
+            userBar.style.display = 'flex';
+            console.log('User bar shown for:', displayName);
+        }
+    }
+    
+    updateStatsDisplay() {
+        const accuracyEl = document.getElementById('accuracyStat');
+        const streakEl = document.getElementById('streakStat');
+        const wordsEl = document.getElementById('wordsStat');
+        
+        if (accuracyEl && streakEl && wordsEl) {
+            const accuracy = this.userStats.totalAnswers > 0 
+                ? Math.round((this.userStats.correctAnswers / this.userStats.totalAnswers) * 100)
+                : 0;
+            
+            accuracyEl.textContent = `${accuracy}%`;
+            streakEl.textContent = `${this.userStats.currentStreak}`;
+            wordsEl.textContent = `${this.userStats.wordsLearned.size}`;
+            
+            console.log('Stats display updated:', {
+                accuracy: `${accuracy}%`,
+                streak: this.userStats.currentStreak,
+                words: this.userStats.wordsLearned.size
+            });
+        }
+    }
+    
+    hideUserBar() {
+        const userBar = document.getElementById('userBar');
+        if (userBar) {
+            userBar.style.display = 'none';
+        }
+    }
+    
+    showError(message) {
+        console.error('Auth Error:', message);
+        
+        // Create a simple error popup
+        const errorPopup = document.createElement('div');
+        errorPopup.className = 'feedback-popup hint show';
+        errorPopup.textContent = message;
+        errorPopup.style.top = '20px';
+        errorPopup.style.zIndex = '3000';
+        
+        document.body.appendChild(errorPopup);
+        
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+            errorPopup.classList.add('hide');
+            setTimeout(() => {
+                if (errorPopup.parentNode) {
+                    errorPopup.parentNode.removeChild(errorPopup);
+                }
+            }, 300);
+        }, 4000);
+    }
+    
+    getCurrentUser() {
+        return this.user;
+    }
+    
+    getUserStats() {
+        return this.userStats;
+    }
+    
+    isAuthenticated() {
+        return !!this.user;
+    }
+}
+
+// Initialize auth when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing Firebase Auth...');
+    window.firebaseAuth = new FirebaseAuth();
+});

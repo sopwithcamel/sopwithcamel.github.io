@@ -426,3 +426,179 @@ header h2 {
         min-width: 120px;
     }
 }
+
+/* Login Modal Styles */
+.login-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-content h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+.modal-content p {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+}
+
+.login-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.google-btn {
+    background: #4285f4 !important;
+    color: white !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    padding: 15px 25px;
+}
+
+.google-btn:hover {
+    background: #3367d6 !important;
+}
+
+.google-icon {
+    background: white;
+    color: #4285f4;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.anonymous-btn {
+    background: #28a745 !important;
+    color: white !important;
+    font-size: 1.1rem;
+    padding: 15px 25px;
+}
+
+.anonymous-btn:hover {
+    background: #218838 !important;
+}
+
+.login-benefits {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.login-benefits p {
+    margin: 5px 0;
+    text-align: left;
+}
+
+/* User Bar Styles */
+.user-bar {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 500;
+    flex-wrap: wrap;
+}
+
+.user-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.btn-small {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 5px 15px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-small:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Mobile responsive for login */
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 30px 20px;
+        margin: 20px;
+    }
+    
+    .modal-content h3 {
+        font-size: 1.5rem;
+    }
+    
+    .user-bar {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .user-info {
+        gap: 10px;
+    }
+}

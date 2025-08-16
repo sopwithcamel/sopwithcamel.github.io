@@ -1,44 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kannada Word Learning Game</title>
+    <title>Learn Kannada - Interactive Game</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Your Firebase config (replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnHUZG7plFPscaY7jqlDwL2cH-d_aOJMQ",
+            authDomain: "learn-9a9dc.firebaseapp.com",
+            projectId: "learn-9a9dc",
+            storageBucket: "learn-9a9dc.firebasestorage.app",
+            messagingSenderId: "847847930785",
+            appId: "1:847847930785:web:1059c49a66e19f949d29e0",
+            measurementId: "G-25N04TNCE0"
+        };
+
+        try {
+            // Initialize Firebase
+            console.log('Initializing Firebase...');
+            window.firebaseApp = initializeApp(firebaseConfig);
+            window.auth = getAuth(window.firebaseApp);
+            window.db = getFirestore(window.firebaseApp);
+
+            console.log('Firebase initialized successfully');
+            console.log('Auth available:', !!window.auth);
+            console.log('DB available:', !!window.db);
+
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+        }
+    </script>
 </head>
+
 <body>
+    <!-- Login Modal (initially hidden) -->
+    <div id="loginModal" class="login-modal" style="display: none;">
+        <div class="modal-content">
+            <h3>🎯 Welcome to Kannada Learning!</h3>
+            <p>Choose how you'd like to continue:</p>
+
+            <div class="login-options">
+                <button id="googleLoginBtn" class="btn google-btn">
+                    <span class="google-icon">G</span>
+                    Continue with Google
+                </button>
+
+                <button id="anonymousLoginBtn" class="btn anonymous-btn">
+                    🎮 Play as Guest
+                </button>
+            </div>
+
+            <div class="login-benefits">
+                <p><strong>With Google:</strong> Save progress, track stats</p>
+                <p><strong>As Guest:</strong> Play instantly, no signup needed</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Info Bar -->
+    <div id="userBar" class="user-bar" style="display: none;">
+        <div class="user-info">
+            <span id="userDisplay">Welcome!</span>
+            <div id="userStats" class="user-stats">
+                <div class="stat-item">
+                    <span>🎯</span>
+                    <span id="accuracyStat">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span>🔥</span>
+                    <span id="streakStat">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>📚</span>
+                    <span id="wordsStat">0</span>
+                </div>
+            </div>
+        </div>
+        <button id="logoutBtn" class="btn-small">Logout</button>
+    </div>
+
     <div class="container">
+        <header>
+            <h1>Learn Kannada</h1>
+            <h2>Interactive Word Learning Game</h2>
+        </header>
+
         <div class="game-area">
             <div class="question-area">
                 <div class="english-word" id="englishWord">Loading...</div>
             </div>
 
             <div class="answer-area" style="margin-bottom: 0; text-align: center;">
-                <div class="input-container" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 0;">
+                <div class="input-container"
+                    style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 0;">
                     <input type="text" id="kannadaInput" placeholder="Type the Kannada word here..." readonly>
                 </div>
-                
-         
-            <div class="button-group" style="margin-bottom: 0; text-align: center;">
-                <div class="input-container" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 0;">
-                    <button id="checkBtn" class="btn primary" title="Check">Check</button>
-                    <button id="showAnswerBtn" class="btn secondary" title="Show Answer">Show</button>
+
+                <div class="button-group" style="margin-bottom: 0; text-align: center;">
+                    <div class="input-container"
+                        style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 0;">
+                        <button id="checkBtn" class="btn primary" title="Check">Check</button>
+                        <button id="showAnswerBtn" class="btn secondary" title="Show Answer">Show</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="feedback" id="feedback"></div>
+                <div class="feedback" id="feedback"></div>
 
-            <div id="keyboardContainer" class="keyboard-container">
-                <div class="keyboard" id="kannadaKeyboard">
-                    <!-- Keyboard will be generated by JavaScript -->
+                <div id="keyboardContainer" class="keyboard-container">
+                    <div class="keyboard" id="kannadaKeyboard">
+                        <!-- Keyboard will be generated by JavaScript -->
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Include vocabulary data first, then main script -->
-    <script src="vocabulary.js"></script>
-    <script src="consonants.js"></script>   
-    <script src="script.js"></script>
+        <!-- Include scripts -->
+        <script src="vocabulary.js"></script>
+        <script src="consonants.js"></script>
+        <script src="firebase-auth.js"></script>
+        <script src="script.js"></script>
 </body>
+
 </html>

@@ -264,19 +264,21 @@ function checkAnswer() {
     
     const userAnswer = currentAnswer.trim();
     const correctAnswer = currentWord.kannada.trim();
+    const isCorrect = userAnswer === correctAnswer;
     
-    if (userAnswer === correctAnswer) {
+    // Update Firebase stats if user is authenticated
+    if (window.firebaseAuth && window.firebaseAuth.isAuthenticated()) {
+        window.firebaseAuth.updateStats(isCorrect, currentWord.english);
+    }
+    
+    if (isCorrect) {
         showFeedback('Correct! Well done! 🎉', 'correct');
-        console.log('Setting timeout for next word...');
         setTimeout(() => {
-            console.log('Loading next word...');
             loadNewWord();
         }, 2000);
     } else {
         showFeedback(`Incorrect. The correct answer is: ${correctAnswer}`, 'incorrect');
-        console.log('Setting timeout for next word (incorrect answer)...');
         setTimeout(() => {
-            console.log('Loading next word (incorrect answer)...');
             loadNewWord();
         }, 2000);
     }
@@ -391,5 +393,23 @@ function setupResponsiveKeyboard() {
     });
 }
 
+// Listen for user authentication
+window.addEventListener('userAuthenticated', (event) => {
+    const { user, stats } = event.detail;
+    console.log('User authenticated:', user.isAnonymous ? 'Anonymous' : user.displayName);
+    console.log('User stats:', stats);
+    
+    // Initialize game now that user is authenticated
+    if (!gameInitialized) {
+        initGame();
+        gameInitialized = true;
+    }
+});
+
+let gameInitialized = false;
+
 // Initialize the game when the page loads
-document.addEventListener('DOMContentLoaded', initGame);
+document.addEventListener('DOMContentLoaded', () => {
+    // Don't initialize game immediately - wait for authentication
+    console.log('DOM loaded, waiting for authentication...');
+});
