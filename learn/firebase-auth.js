@@ -448,21 +448,18 @@ class FirebaseAuth {
     
     updateStatsDisplay() {
         const accuracyEl = document.getElementById('accuracyStat');
-        const streakEl = document.getElementById('streakStat');
         const wordsEl = document.getElementById('wordsStat');
         
-        if (accuracyEl && streakEl && wordsEl) {
+        if (accuracyEl && wordsEl) {
             const accuracy = this.userStats.totalAnswers > 0 
                 ? Math.round((this.userStats.correctAnswers / this.userStats.totalAnswers) * 100)
                 : 0;
             
             accuracyEl.textContent = `${accuracy}%`;
-            streakEl.textContent = `${this.userStats.currentStreak}`;
             wordsEl.textContent = `${this.userStats.wordsLearned.size}`;
             
             console.log('Stats display updated:', {
                 accuracy: `${accuracy}%`,
-                streak: this.userStats.currentStreak,
                 words: this.userStats.wordsLearned.size
             });
         }
