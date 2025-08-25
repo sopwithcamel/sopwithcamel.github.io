@@ -252,6 +252,49 @@ class FirebaseAuth {
         console.log('Stats reset to initial values');
     }
     
+    // Garbage collect guesses older than 30 days
+    cleanupOldGuesses() {
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
+        let totalRemovedGuesses = 0;
+        let wordsToDelete = [];
+        let hasChanges = false;
+        
+        for (const [word, guesses] of this.userStats.wordGuesses) {
+            const recentGuesses = guesses.filter(guess => guess.date > thirtyDaysAgo);
+            
+            if (recentGuesses.length === 0) {
+                // No recent guesses, mark word for deletion
+                wordsToDelete.push(word);
+                totalRemovedGuesses += guesses.length;
+                hasChanges = true;
+            } else if (recentGuesses.length < guesses.length) {
+                // Some guesses were old, update with only recent ones
+                this.userStats.wordGuesses.set(word, recentGuesses);
+                totalRemovedGuesses += (guesses.length - recentGuesses.length);
+                hasChanges = true;
+            }
+        }
+        
+        // Remove words with no recent guesses
+        wordsToDelete.forEach(word => {
+            this.userStats.wordGuesses.delete(word);
+        });
+        
+        if (hasChanges) {
+            console.log(`Garbage collection: Removed ${totalRemovedGuesses} old guesses for ${wordsToDelete.length + (totalRemovedGuesses - wordsToDelete.length > 0 ? ' partially cleaned' : '')} words`);
+            
+            // Save the cleaned data
+            if (this.user && !this.user.isAnonymous && !this.user.isLocalGuest) {
+                // For Firestore users, we need a full document overwrite to remove old data
+                this.saveUserStats();
+            } else if (this.user && (this.user.isAnonymous || this.user.isLocalGuest)) {
+                this.saveLocalStats();
+            }
+        }
+        
+        return totalRemovedGuesses;
+    }
+    
     async handleAuthStateChange(user) {
         console.log('Auth state changed:', user ? user.uid : 'null');
         
@@ -304,6 +347,9 @@ class FirebaseAuth {
                     wordGuesses: new Map(parsed.wordGuesses || [])
                 };
                 console.log('Local stats loaded:', this.userStats);
+                
+                // Run garbage collection on loaded data
+                this.cleanupOldGuesses();
             } catch (error) {
                 console.error('Error loading local stats:', error);
             }
@@ -356,6 +402,9 @@ class FirebaseAuth {
                     wordGuesses: wordGuessesMap
                 };
                 console.log('User stats loaded from Firestore:', this.userStats);
+                
+                // Run garbage collection on loaded data
+                this.cleanupOldGuesses();
             } else {
                 // Create new user document
                 console.log('Creating new user document');
