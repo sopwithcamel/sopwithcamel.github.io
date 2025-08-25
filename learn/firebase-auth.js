@@ -1,13 +1,8 @@
 class FirebaseAuth {
     constructor() {
         this.user = null;
-        this.isRegistering = false; // Add this line
-        this.userStats = {
-            gamesPlayed: 0,
-            correctAnswers: 0,
-            totalAnswers: 0,
-            wordGuesses: new Map() // word -> array of {correct: boolean, date: timestamp}
-        };
+        this.isRegistering = false;
+        this.userStats = new UserStats(); // Use the separate UserStats class
         
         this.firebaseModules = null;
         this.init();
@@ -243,56 +238,7 @@ class FirebaseAuth {
     
     // Add a method to reset stats to initial values
     resetStats() {
-        this.userStats = {
-            gamesPlayed: 0,
-            correctAnswers: 0,
-            totalAnswers: 0,
-            wordGuesses: new Map() // word -> array of {correct: boolean, date: timestamp}
-        };
-        console.log('Stats reset to initial values');
-    }
-    
-    // Garbage collect guesses older than 30 days
-    cleanupOldGuesses() {
-        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
-        let totalRemovedGuesses = 0;
-        let wordsToDelete = [];
-        let hasChanges = false;
-        
-        for (const [word, guesses] of this.userStats.wordGuesses) {
-            const recentGuesses = guesses.filter(guess => guess.date > thirtyDaysAgo);
-            
-            if (recentGuesses.length === 0) {
-                // No recent guesses, mark word for deletion
-                wordsToDelete.push(word);
-                totalRemovedGuesses += guesses.length;
-                hasChanges = true;
-            } else if (recentGuesses.length < guesses.length) {
-                // Some guesses were old, update with only recent ones
-                this.userStats.wordGuesses.set(word, recentGuesses);
-                totalRemovedGuesses += (guesses.length - recentGuesses.length);
-                hasChanges = true;
-            }
-        }
-        
-        // Remove words with no recent guesses
-        wordsToDelete.forEach(word => {
-            this.userStats.wordGuesses.delete(word);
-        });
-        
-        if (hasChanges) {
-            console.log(`Garbage collection: Removed ${totalRemovedGuesses} old guesses for ${wordsToDelete.length + (totalRemovedGuesses - wordsToDelete.length > 0 ? ' partially cleaned' : '')} words`);
-            
-            // Save the cleaned data
-            if (this.user && !this.user.isAnonymous && !this.user.isLocalGuest) {
-                // For Firestore users, we need a full document overwrite to remove old data
-                this.saveUserStats();
-            } else if (this.user && (this.user.isAnonymous || this.user.isLocalGuest)) {
-                this.saveLocalStats();
-            }
-        }
-        
-        return totalRemovedGuesses;
+        this.userStats.reset();
     }
     
     async handleAuthStateChange(user) {
@@ -333,23 +279,18 @@ class FirebaseAuth {
     }
     
     loadLocalStats() {
-        // For guest users, you might want fresh stats each time
-        // Comment out this method body if you want fresh stats for each guest session
-        
         // Load stats from localStorage for anonymous users
         const savedStats = localStorage.getItem('kannadaLearnerStats');
         if (savedStats) {
             try {
                 const parsed = JSON.parse(savedStats);
-                this.userStats = {
-                    ...this.userStats,
-                    ...parsed,
-                    wordGuesses: new Map(parsed.wordGuesses || [])
-                };
-                console.log('Local stats loaded:', this.userStats);
+                this.userStats.loadFromData(parsed);
                 
-                // Run garbage collection on loaded data
-                this.cleanupOldGuesses();
+                // Save cleaned data if cleanup occurred
+                const cleanup = this.userStats.cleanupOldGuesses();
+                if (cleanup.hasChanges) {
+                    this.saveLocalStats();
+                }
             } catch (error) {
                 console.error('Error loading local stats:', error);
             }
@@ -360,11 +301,7 @@ class FirebaseAuth {
     saveLocalStats() {
         // Save stats to localStorage for anonymous/local users
         if (this.user && (this.user.isAnonymous || this.user.isLocalGuest)) {
-            const statsToSave = {
-                ...this.userStats,
-                wordGuesses: Array.from(this.userStats.wordGuesses),
-                lastUpdated: new Date().toISOString()
-            };
+            const statsToSave = this.userStats.exportForSave();
             localStorage.setItem('kannadaLearnerStats', JSON.stringify(statsToSave));
             console.log('Local stats saved');
         }
@@ -381,7 +318,7 @@ class FirebaseAuth {
         }
         
         try {
-            const { doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
             
             const userDoc = await getDoc(doc(window.db, 'users', this.user.uid));
             
@@ -396,15 +333,19 @@ class FirebaseAuth {
                     }
                 }
                 
-                this.userStats = {
-                    ...this.userStats,
+                // Prepare data for UserStats
+                const statsData = {
                     ...data,
                     wordGuesses: wordGuessesMap
                 };
-                console.log('User stats loaded from Firestore:', this.userStats);
                 
-                // Run garbage collection on loaded data
-                this.cleanupOldGuesses();
+                this.userStats.loadFromData(statsData);
+                
+                // Save cleaned data if cleanup occurred
+                const cleanup = this.userStats.cleanupOldGuesses();
+                if (cleanup.hasChanges) {
+                    this.saveUserStats();
+                }
             } else {
                 // Create new user document
                 console.log('Creating new user document');
@@ -430,17 +371,7 @@ class FirebaseAuth {
         try {
             const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
             
-            // Flatten wordGuesses for Firestore compatibility
-            const wordGuessesFlat = {};
-            for (const [word, guesses] of this.userStats.wordGuesses) {
-                wordGuessesFlat[word] = guesses;
-            }
-            
-            const statsToSave = {
-                ...this.userStats,
-                wordGuesses: wordGuessesFlat,
-                lastUpdated: new Date().toISOString()
-            };
+            const statsToSave = this.userStats.exportForFirestore();
             
             await setDoc(doc(window.db, 'users', this.user.uid), statsToSave);
             console.log('User stats saved to Firestore');
@@ -471,8 +402,8 @@ class FirebaseAuth {
             
             const updateData = {
                 [`wordGuesses.${word}`]: arrayUnion(guessData),
-                correctAnswers: this.userStats.correctAnswers,
-                totalAnswers: this.userStats.totalAnswers,
+                correctAnswers: this.userStats.getStats().correctAnswers,
+                totalAnswers: this.userStats.getStats().totalAnswers,
                 lastUpdated: new Date().toISOString()
             };
             
@@ -487,20 +418,8 @@ class FirebaseAuth {
     }
     
     updateStats(isCorrect, word) {
-        this.userStats.totalAnswers++;
-        
-        // Record the guess for this word locally
-        if (!this.userStats.wordGuesses.has(word)) {
-            this.userStats.wordGuesses.set(word, []);
-        }
-        this.userStats.wordGuesses.get(word).push({
-            correct: isCorrect,
-            date: Date.now()
-        });
-        
-        if (isCorrect) {
-            this.userStats.correctAnswers++;
-        }
+        // Update stats using UserStats class
+        this.userStats.updateWithGuess(isCorrect, word);
         
         // Use efficient word-specific save for Firestore
         this.saveWordGuess(word, isCorrect);
@@ -556,12 +475,8 @@ class FirebaseAuth {
         const wordsEl = document.getElementById('wordsStat');
         
         if (accuracyEl && wordsEl) {
-            const accuracy = this.userStats.totalAnswers > 0 
-                ? Math.round((this.userStats.correctAnswers / this.userStats.totalAnswers) * 100)
-                : 0;
-            
-            // Calculate words learned from guesses (words with at least one correct answer)
-            const wordsLearned = this.getWordsLearned().length;
+            const accuracy = this.userStats.getAccuracy();
+            const wordsLearned = this.userStats.getWordsLearned().length;
             
             accuracyEl.textContent = `${accuracy}%`;
             wordsEl.textContent = `${wordsLearned}`;
@@ -613,62 +528,6 @@ class FirebaseAuth {
     
     isAuthenticated() {
         return !!this.user;
-    }
-    
-    // Helper methods for word guess tracking
-    getWordGuessHistory(word) {
-        return this.userStats.wordGuesses.get(word) || [];
-    }
-    
-    getWordAccuracy(word) {
-        const guesses = this.getWordGuessHistory(word);
-        if (guesses.length === 0) return 0;
-        
-        const correctGuesses = guesses.filter(guess => guess.correct).length;
-        return Math.round((correctGuesses / guesses.length) * 100);
-    }
-    
-    getTotalGuessesForWord(word) {
-        return this.getWordGuessHistory(word).length;
-    }
-    
-    getCorrectGuessesForWord(word) {
-        return this.getWordGuessHistory(word).filter(guess => guess.correct).length;
-    }
-    
-    getRecentGuessesForWord(word, limit = 5) {
-        const guesses = this.getWordGuessHistory(word);
-        return guesses.slice(-limit); // Get the most recent guesses
-    }
-    
-    getAllWordsWithGuesses() {
-        return Array.from(this.userStats.wordGuesses.keys());
-    }
-    
-    getWordsLearned(minCorrectAnswers = 1) {
-        // Words are considered "learned" if they have at least minCorrectAnswers correct guesses
-        return this.getAllWordsWithGuesses().filter(word => {
-            return this.getCorrectGuessesForWord(word) >= minCorrectAnswers;
-        });
-    }
-    
-    getWordsNeedingPractice(accuracyThreshold = 70, minGuesses = 3) {
-        return this.getAllWordsWithGuesses().filter(word => {
-            const accuracy = this.getWordAccuracy(word);
-            const totalGuesses = this.getTotalGuessesForWord(word);
-            // Only consider words with at least minGuesses and below threshold
-            return totalGuesses >= minGuesses && accuracy < accuracyThreshold;
-        });
-    }
-    
-    getWordsByAccuracy() {
-        const words = this.getAllWordsWithGuesses();
-        return words.map(word => ({
-            word,
-            accuracy: this.getWordAccuracy(word),
-            totalGuesses: this.getTotalGuessesForWord(word),
-            correctGuesses: this.getCorrectGuessesForWord(word)
-        })).sort((a, b) => a.accuracy - b.accuracy);
     }
     
     showEmailForm() {
