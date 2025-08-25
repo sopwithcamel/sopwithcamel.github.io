@@ -6,9 +6,7 @@ class FirebaseAuth {
             gamesPlayed: 0,
             correctAnswers: 0,
             totalAnswers: 0,
-            currentStreak: 0,
-            bestStreak: 0,
-            wordsLearned: new Set()
+            wordGuesses: new Map() // word -> array of {correct: boolean, date: timestamp}
         };
         
         this.firebaseModules = null;
@@ -249,9 +247,7 @@ class FirebaseAuth {
             gamesPlayed: 0,
             correctAnswers: 0,
             totalAnswers: 0,
-            currentStreak: 0,
-            bestStreak: 0,
-            wordsLearned: new Set()
+            wordGuesses: new Map() // word -> array of {correct: boolean, date: timestamp}
         };
         console.log('Stats reset to initial values');
     }
@@ -305,7 +301,7 @@ class FirebaseAuth {
                 this.userStats = {
                     ...this.userStats,
                     ...parsed,
-                    wordsLearned: new Set(parsed.wordsLearned || [])
+                    wordGuesses: new Map(parsed.wordGuesses || [])
                 };
                 console.log('Local stats loaded:', this.userStats);
             } catch (error) {
@@ -320,7 +316,7 @@ class FirebaseAuth {
         if (this.user && (this.user.isAnonymous || this.user.isLocalGuest)) {
             const statsToSave = {
                 ...this.userStats,
-                wordsLearned: Array.from(this.userStats.wordsLearned),
+                wordGuesses: Array.from(this.userStats.wordGuesses),
                 lastUpdated: new Date().toISOString()
             };
             localStorage.setItem('kannadaLearnerStats', JSON.stringify(statsToSave));
@@ -345,10 +341,19 @@ class FirebaseAuth {
             
             if (userDoc.exists()) {
                 const data = userDoc.data();
+                
+                // Reconstruct wordGuesses Map from Firestore object
+                const wordGuessesMap = new Map();
+                if (data.wordGuesses) {
+                    for (const [word, guesses] of Object.entries(data.wordGuesses)) {
+                        wordGuessesMap.set(word, guesses);
+                    }
+                }
+                
                 this.userStats = {
                     ...this.userStats,
                     ...data,
-                    wordsLearned: new Set(data.wordsLearned || [])
+                    wordGuesses: wordGuessesMap
                 };
                 console.log('User stats loaded from Firestore:', this.userStats);
             } else {
@@ -376,9 +381,15 @@ class FirebaseAuth {
         try {
             const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
             
+            // Flatten wordGuesses for Firestore compatibility
+            const wordGuessesFlat = {};
+            for (const [word, guesses] of this.userStats.wordGuesses) {
+                wordGuessesFlat[word] = guesses;
+            }
+            
             const statsToSave = {
                 ...this.userStats,
-                wordsLearned: Array.from(this.userStats.wordsLearned),
+                wordGuesses: wordGuessesFlat,
                 lastUpdated: new Date().toISOString()
             };
             
@@ -388,24 +399,69 @@ class FirebaseAuth {
             console.error('Error saving user stats:', error);
         }
     }
+
+    async saveWordGuess(word, isCorrect) {
+        if (!this.user) return;
+        
+        // Save to localStorage for anonymous/local users
+        if (this.user.isAnonymous || this.user.isLocalGuest) {
+            this.saveLocalStats();
+            return;
+        }
+        
+        // Save to Firestore for authenticated users
+        if (!window.db) return;
+        
+        try {
+            const { doc, updateDoc, arrayUnion } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            
+            const guessData = {
+                correct: isCorrect,
+                date: Date.now()
+            };
+            
+            const updateData = {
+                [`wordGuesses.${word}`]: arrayUnion(guessData),
+                correctAnswers: this.userStats.correctAnswers,
+                totalAnswers: this.userStats.totalAnswers,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            await updateDoc(doc(window.db, 'users', this.user.uid), updateData);
+            console.log('Word guess saved efficiently to Firestore for word:', word);
+        } catch (error) {
+            console.error('Error saving word guess:', error);
+            // Fallback to full document save if partial update fails
+            console.log('Falling back to full document save...');
+            await this.saveUserStats();
+        }
+    }
     
     updateStats(isCorrect, word) {
         this.userStats.totalAnswers++;
         
+        // Record the guess for this word locally
+        if (!this.userStats.wordGuesses.has(word)) {
+            this.userStats.wordGuesses.set(word, []);
+        }
+        this.userStats.wordGuesses.get(word).push({
+            correct: isCorrect,
+            date: Date.now()
+        });
+        
         if (isCorrect) {
             this.userStats.correctAnswers++;
-            this.userStats.currentStreak++;
-            this.userStats.wordsLearned.add(word);
-            
-            if (this.userStats.currentStreak > this.userStats.bestStreak) {
-                this.userStats.bestStreak = this.userStats.currentStreak;
-            }
-        } else {
-            this.userStats.currentStreak = 0;
         }
         
-        this.saveUserStats();
-        this.updateStatsDisplay(); // Add this line
+        // Use efficient word-specific save for Firestore
+        this.saveWordGuess(word, isCorrect);
+        this.updateStatsDisplay();
+    }
+    
+    // Record when user clicks "Show" - counts as wrong answer
+    recordShowAnswer(word) {
+        this.updateStats(false, word);
+        console.log('Show answer recorded as wrong for word:', word);
     }
     
     showLoginModal() {
@@ -455,12 +511,15 @@ class FirebaseAuth {
                 ? Math.round((this.userStats.correctAnswers / this.userStats.totalAnswers) * 100)
                 : 0;
             
+            // Calculate words learned from guesses (words with at least one correct answer)
+            const wordsLearned = this.getWordsLearned().length;
+            
             accuracyEl.textContent = `${accuracy}%`;
-            wordsEl.textContent = `${this.userStats.wordsLearned.size}`;
+            wordsEl.textContent = `${wordsLearned}`;
             
             console.log('Stats display updated:', {
                 accuracy: `${accuracy}%`,
-                words: this.userStats.wordsLearned.size
+                words: wordsLearned
             });
         }
     }
@@ -505,6 +564,62 @@ class FirebaseAuth {
     
     isAuthenticated() {
         return !!this.user;
+    }
+    
+    // Helper methods for word guess tracking
+    getWordGuessHistory(word) {
+        return this.userStats.wordGuesses.get(word) || [];
+    }
+    
+    getWordAccuracy(word) {
+        const guesses = this.getWordGuessHistory(word);
+        if (guesses.length === 0) return 0;
+        
+        const correctGuesses = guesses.filter(guess => guess.correct).length;
+        return Math.round((correctGuesses / guesses.length) * 100);
+    }
+    
+    getTotalGuessesForWord(word) {
+        return this.getWordGuessHistory(word).length;
+    }
+    
+    getCorrectGuessesForWord(word) {
+        return this.getWordGuessHistory(word).filter(guess => guess.correct).length;
+    }
+    
+    getRecentGuessesForWord(word, limit = 5) {
+        const guesses = this.getWordGuessHistory(word);
+        return guesses.slice(-limit); // Get the most recent guesses
+    }
+    
+    getAllWordsWithGuesses() {
+        return Array.from(this.userStats.wordGuesses.keys());
+    }
+    
+    getWordsLearned(minCorrectAnswers = 1) {
+        // Words are considered "learned" if they have at least minCorrectAnswers correct guesses
+        return this.getAllWordsWithGuesses().filter(word => {
+            return this.getCorrectGuessesForWord(word) >= minCorrectAnswers;
+        });
+    }
+    
+    getWordsNeedingPractice(accuracyThreshold = 70, minGuesses = 3) {
+        return this.getAllWordsWithGuesses().filter(word => {
+            const accuracy = this.getWordAccuracy(word);
+            const totalGuesses = this.getTotalGuessesForWord(word);
+            // Only consider words with at least minGuesses and below threshold
+            return totalGuesses >= minGuesses && accuracy < accuracyThreshold;
+        });
+    }
+    
+    getWordsByAccuracy() {
+        const words = this.getAllWordsWithGuesses();
+        return words.map(word => ({
+            word,
+            accuracy: this.getWordAccuracy(word),
+            totalGuesses: this.getTotalGuessesForWord(word),
+            correctGuesses: this.getCorrectGuessesForWord(word)
+        })).sort((a, b) => a.accuracy - b.accuracy);
     }
     
     showEmailForm() {

@@ -331,6 +331,12 @@ function clearFeedback() {
 // Show answer
 function showAnswer() {
     if (!currentWord) return;
+    
+    // Record this as a wrong answer in Firebase stats
+    if (window.firebaseAuth && window.firebaseAuth.isAuthenticated()) {
+        window.firebaseAuth.recordShowAnswer(currentWord.english);
+    }
+    
     showFeedback(`The answer is: ${currentWord.kannada}`, 'hint');
     console.log('Setting timeout for next word (show answer)...');
     setTimeout(() => {
