@@ -78,16 +78,8 @@ class UIComponents {
             modalImage.alt = levelData.name;
             modalTitle.textContent = levelData.name;
             
-            // Create description based on level - simple snake identity
-            let description;
-            if (levelData.isMaxLevel) {
-                description = `Congratulations! You are now a ${levelData.name} <strong>(Level ${levelData.level})</strong>. You have mastered Kannada learning!`;
-            } else {
-                // Use proper article (a/an) based on first letter
-                const article = ['A', 'E', 'I', 'O', 'U'].includes(levelData.name[0]) ? 'an' : 'a';
-                description = `You are now ${article} ${levelData.name} <strong>(Level ${levelData.level})</strong>!`;
-            }
-            modalDescription.innerHTML = description;
+            // Generate AI-powered snake fact
+            this.generateAndShowSnakeFact(levelData.name, modalDescription, levelData);
             
             // Get mastered words (words with high expertise)
             const masteredWords = this.getMasteredWords(userStats, 0.7); // 70% expertise threshold
@@ -111,6 +103,62 @@ class UIComponents {
                 modal.classList.add('show');
             }, 10);
         }
+    }
+    
+    // Generate and display AI snake fact
+    async generateAndShowSnakeFact(snakeName, modalDescription, levelData) {
+        // Show a loading message first
+        const loadingMessage = `You are now ${levelData.isMaxLevel ? 'a' : ['A', 'E', 'I', 'O', 'U'].includes(snakeName[0]) ? 'an' : 'a'} ${snakeName} <strong>(Level ${levelData.level})</strong>! ${levelData.isMaxLevel ? 'You have mastered Kannada learning! ' : ''}Generating snake fact... 🤔`;
+        modalDescription.innerHTML = loadingMessage;
+        
+        try {
+            // Check if Firebase AI is available
+            if (window.firebaseAuth && window.firebaseAuth.generativeModel) {
+                const snakeFact = await window.firebaseAuth.generateSnakeFact(snakeName);
+                
+                // Convert Markdown to HTML
+                const htmlSnakeFact = this.markdownToHtml(snakeFact);
+                
+                // Create the final description with level info + AI fact
+                const levelInfo = `You are now ${levelData.isMaxLevel ? 'a' : ['A', 'E', 'I', 'O', 'U'].includes(snakeName[0]) ? 'an' : 'a'} ${snakeName} <strong>(Level ${levelData.level})</strong>!${levelData.isMaxLevel ? ' You have mastered Kannada learning!' : ''}<br><br>`;
+                modalDescription.innerHTML = levelInfo + htmlSnakeFact;
+                
+            } else {
+                // Fallback if AI is not available
+                const fallbackMessage = `You are now ${levelData.isMaxLevel ? 'a' : ['A', 'E', 'I', 'O', 'U'].includes(snakeName[0]) ? 'an' : 'a'} ${snakeName} <strong>(Level ${levelData.level})</strong>!${levelData.isMaxLevel ? ' You have mastered Kannada learning!' : ''}<br><br>The ${snakeName} is an amazing snake! Keep practicing to learn more! 🐍`;
+                modalDescription.innerHTML = fallbackMessage;
+            }
+        } catch (error) {
+            console.error('Error generating snake fact:', error);
+            // Show fallback message on error
+            const errorMessage = `You are now ${levelData.isMaxLevel ? 'a' : ['A', 'E', 'I', 'O', 'U'].includes(snakeName[0]) ? 'an' : 'a'} ${snakeName} <strong>(Level ${levelData.level})</strong>!${levelData.isMaxLevel ? ' You have mastered Kannada learning!' : ''}<br><br>The ${snakeName} is fascinating! Snakes are incredible creatures with amazing abilities! 🐍`;
+            modalDescription.innerHTML = errorMessage;
+        }
+    }
+    
+    // Simple Markdown to HTML converter for basic formatting
+    markdownToHtml(markdown) {
+        let html = markdown;
+        
+        // Convert **bold** to <strong>
+        html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        
+        // Convert *italic* to <em>
+        html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        
+        // Convert _italic_ to <em>
+        html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+        
+        // Convert `code` to <code>
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Convert line breaks to <br>
+        html = html.replace(/\n/g, '<br>');
+        
+        // Convert scientific names in parentheses to italic
+        html = html.replace(/\(([A-Z][a-z]+ [a-z]+)\)/g, '<em>($1)</em>');
+        
+        return html;
     }
     
     getMasteredWords(userStats, expertiseThreshold = 0.7) {

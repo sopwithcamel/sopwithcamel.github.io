@@ -24,7 +24,7 @@ class FirebaseAuth {
         
         try {
             // Import Firebase modules
-            this.firebaseModules = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+            this.firebaseModules = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js');
             
             // Store references to Firebase functions
             this.signInWithPopup = this.firebaseModules.signInWithPopup;
@@ -37,6 +37,9 @@ class FirebaseAuth {
             this.createUserWithEmailAndPassword = this.firebaseModules.createUserWithEmailAndPassword;
             this.signInWithEmailAndPassword = this.firebaseModules.signInWithEmailAndPassword;
             this.updateProfile = this.firebaseModules.updateProfile;
+            
+            // Initialize Firebase AI Logic with Gemini 2.5 Flash
+            await this.initializeAI();
             
             console.log('Firebase modules loaded successfully');
             
@@ -65,6 +68,102 @@ class FirebaseAuth {
         console.log('Setting up fallback mode without Firebase');
         this.setupEventListeners();
         this.showLoginModal();
+    }
+    
+    // Initialize Firebase AI Logic with Gemini 2.5 Flash
+    async initializeAI() {
+        try {
+            // Import Firebase AI SDK (not Vertex AI)
+            const { getAI, getGenerativeModel, GoogleAIBackend } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-ai.js');
+            
+            // Initialize the Gemini Developer API backend service
+            this.ai = getAI(window.firebaseApp, { backend: new GoogleAIBackend() });
+            
+            // Create generative model instance with Gemini 2.5 Flash
+            this.generativeModel = getGenerativeModel(this.ai, {
+                model: 'gemini-2.5-flash',
+                generationConfig: {
+                    temperature: 0.7,
+                    topP: 0.8,
+                    topK: 40,
+                    maxOutputTokens: 1000,
+                },
+                safetySettings: [
+                    {
+                        category: 'HARM_CATEGORY_HARASSMENT',
+                        threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+                    },
+                    {
+                        category: 'HARM_CATEGORY_HATE_SPEECH',
+                        threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+                    }
+                ]
+            });
+            
+            console.log('Firebase AI with Gemini 2.5 Flash initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize Firebase AI:', error);
+            this.generativeModel = null;
+        }
+    }
+    
+    // Generate a funny fact about a specific snake
+    async generateSnakeFact(snakeName) {
+        if (!this.generativeModel) {
+            console.warn('AI model not available, returning default fact');
+            return `The ${snakeName} is amazing! Did you know snakes can't blink? They have fixed transparent scales over their eyes instead of eyelids! 🐍`;
+        }
+        
+        try {
+            const prompt = `Write a short, funny and interesting fact about the "${snakeName}" snake. 
+            
+            Make it:
+            1. Educational but entertaining
+            2. 1-2 sentences maximum
+            3. Family-friendly and fun
+            4. Include its scientific name if known
+            
+            Focus on something unique, quirky, or surprising about this specific snake species.`;
+            
+            console.log('Generating snake fact for:', snakeName);
+            
+            const result = await this.generativeModel.generateContent(prompt);
+            
+            console.log('AI result received:', result);
+            
+            // More robust response handling
+            if (result && result.response) {
+                const response = result.response;
+                console.log('Response object:', response);
+                
+                // Try to get text from response
+                if (typeof response.text === 'function') {
+                    const text = await response.text();
+                    console.log('Generated text:', text);
+                    return text;
+                } else if (response.text) {
+                    return response.text;
+                } else if (response.candidates && response.candidates[0] && response.candidates[0].content) {
+                    // Fallback: try to extract from candidates
+                    const content = response.candidates[0].content;
+                    if (content.parts && content.parts[0] && content.parts[0].text) {
+                        return content.parts[0].text;
+                    }
+                }
+            }
+            
+            throw new Error('Unable to extract text from AI response');
+            
+        } catch (error) {
+            console.error('Error generating snake fact:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+            
+            return `The ${snakeName} is fascinating! Fun fact: Snakes smell with their tongues by collecting chemical information from the air! 🐍`;
+        }
     }
     
     setupEventListeners() {
@@ -318,7 +417,7 @@ class FirebaseAuth {
         }
         
         try {
-            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js');
             
             const userDoc = await getDoc(doc(window.db, 'users', this.user.uid));
             
@@ -369,7 +468,7 @@ class FirebaseAuth {
         if (!window.db) return;
         
         try {
-            const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js');
             
             const statsToSave = this.userStats.exportForFirestore();
             
@@ -393,7 +492,7 @@ class FirebaseAuth {
         if (!window.db) return;
         
         try {
-            const { doc, updateDoc, arrayUnion } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const { doc, updateDoc, arrayUnion } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js');
             
             const guessData = {
                 correct: isCorrect,
