@@ -225,7 +225,7 @@ function loadNewWord() {
         usedWords = [];
     }
     // Find a word that hasn't been used (track by English word string)
-    let availableWords = vocabulary.filter(word => !usedWords.includes(word.english));
+    let availableWords = vocabulary.filter(word => !usedWords.includes(word[0]));
     if (availableWords.length === 0) {
         // All words used, reset and use all
         availableWords = [...vocabulary];
@@ -236,20 +236,20 @@ function loadNewWord() {
         currentWord = availableWords[0];
     } else {
         // Pick a word that is not the current word
-        let filtered = availableWords.filter(word => !currentWord || word.english !== currentWord.english);
+        let filtered = availableWords.filter(word => !currentWord || word[0] !== currentWord[0]);
         if (filtered.length === 0) {
             filtered = availableWords;
         }
         currentWord = filtered[Math.floor(Math.random() * filtered.length)];
     }
-    usedWords.push(currentWord.english);
+    usedWords.push(currentWord[0]);
     
     console.log('Selected word:', currentWord);
     
     // Update display
     if (englishWordEl) {
-        englishWordEl.textContent = currentWord.english;
-        console.log('Updated englishWordEl with:', currentWord.english);
+        englishWordEl.textContent = currentWord[0];
+        console.log('Updated englishWordEl with:', currentWord[0]);
     } else {
         console.error('englishWordEl is null!');
     }
@@ -263,12 +263,12 @@ function checkAnswer() {
     if (!currentWord) return;
     
     const userAnswer = currentAnswer.trim();
-    const correctAnswer = currentWord.kannada.trim();
+    const correctAnswer = currentWord[1].trim();
     const isCorrect = userAnswer === correctAnswer;
     
     // Update Firebase stats if user is authenticated
     if (window.firebaseAuth && window.firebaseAuth.isAuthenticated()) {
-        window.firebaseAuth.updateStats(isCorrect, currentWord.english);
+        window.firebaseAuth.updateStats(isCorrect, currentWord[0]);
     }
     
     if (isCorrect) {
@@ -334,10 +334,10 @@ function showAnswer() {
     
     // Record this as a wrong answer in Firebase stats
     if (window.firebaseAuth && window.firebaseAuth.isAuthenticated()) {
-        window.firebaseAuth.recordShowAnswer(currentWord.english);
+        window.firebaseAuth.recordShowAnswer(currentWord[0]);
     }
     
-    showFeedback(`The answer is: ${currentWord.kannada}`, 'hint');
+    showFeedback(`The answer is: ${currentWord[1]}`, 'hint');
     console.log('Setting timeout for next word (show answer)...');
     setTimeout(() => {
         console.log('Loading next word (show answer)...');

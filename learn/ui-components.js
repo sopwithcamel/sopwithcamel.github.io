@@ -124,11 +124,11 @@ class UIComponents {
             const expertise = userStats.getWordExpertise(englishWord);
             if (expertise >= expertiseThreshold) {
                 // Find the Kannada translation
-                const vocabEntry = vocabulary.find(entry => entry.english === englishWord);
+                const vocabEntry = vocabulary.find(entry => entry[0] === englishWord);
                 if (vocabEntry) {
                     wordsWithExpertise.push({
                         english: englishWord,
-                        kannada: vocabEntry.kannada,
+                        kannada: vocabEntry[1],
                         expertise: expertise
                     });
                 }
@@ -159,15 +159,15 @@ class UIComponents {
             // Include words that have been attempted at least once and have low expertise
             if (expertise < expertiseThreshold && totalGuesses >= 1) {
                 // Find the Kannada translation
-                const vocabEntry = vocabulary.find(entry => entry.english === englishWord);
+                const vocabEntry = vocabulary.find(entry => entry[0] === englishWord);
                 if (vocabEntry) {
                     wordsNeedingPractice.push({
                         english: englishWord,
-                        kannada: vocabEntry.kannada,
+                        kannada: vocabEntry[1],
                         expertise: expertise,
                         attempts: totalGuesses
                     });
-                    console.log(`Added to practice: ${englishWord} (${vocabEntry.kannada})`);
+                    console.log(`Added to practice: ${englishWord} (${vocabEntry[1]})`);
                 }
             }
         }
