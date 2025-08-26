@@ -254,32 +254,69 @@ class UserStats {
         return Math.max(0, Math.min(1, adjustedExpertise));
     }
     
+    // Snake-themed expertise levels (narrow at beginning and end for motivation)
+    static EXPERTISE_LEVELS = [
+        { level: 0, name: "Earthworm", minExpertise: 0.00, maxExpertise: 0.05 },
+        { level: 1, name: "Hognose Snake", minExpertise: 0.05, maxExpertise: 0.15 },
+        { level: 2, name: "Red Sand Boa", minExpertise: 0.15, maxExpertise: 0.30 },
+        { level: 3, name: "Indian Rat Snake", minExpertise: 0.30, maxExpertise: 0.45 },
+        { level: 4, name: "Indian Rock Python", minExpertise: 0.45, maxExpertise: 0.60 },
+        { level: 5, name: "Checkered Keelback", minExpertise: 0.60, maxExpertise: 0.72 },
+        { level: 6, name: "Spectacled Cobra", minExpertise: 0.72, maxExpertise: 0.82 },
+        { level: 7, name: "Russell's Viper", minExpertise: 0.82, maxExpertise: 0.90 },
+        { level: 8, name: "Krait", minExpertise: 0.90, maxExpertise: 0.97 },
+        { level: 9, name: "King Cobra", minExpertise: 0.97, maxExpertise: 1.00 }
+    ];
+    
+    // Get current expertise level based on overall expertise
+    getExpertiseLevel(totalVocabularySize = 100) {
+        const overallExpertise = this.getOverallExpertise(totalVocabularySize);
+        
+        // Find the appropriate level
+        for (let i = UserStats.EXPERTISE_LEVELS.length - 1; i >= 0; i--) {
+            const level = UserStats.EXPERTISE_LEVELS[i];
+            if (overallExpertise >= level.minExpertise) {
+                // Calculate progress within this level
+                const levelRange = level.maxExpertise - level.minExpertise;
+                const progressInLevel = (overallExpertise - level.minExpertise) / levelRange;
+                const progressPercentage = Math.round(progressInLevel * 100);
+                
+                return {
+                    level: level.level,
+                    name: level.name,
+                    overallExpertise: overallExpertise,
+                    expertisePercentage: Math.round(overallExpertise * 100),
+                    progressInLevel: Math.max(0, Math.min(100, progressPercentage)),
+                    nextLevel: level.level < 9 ? UserStats.EXPERTISE_LEVELS[level.level + 1] : null,
+                    isMaxLevel: level.level === 9
+                };
+            }
+        }
+        
+        // Fallback to level 0 if somehow no level matches
+        return {
+            level: 0,
+            name: UserStats.EXPERTISE_LEVELS[0].name,
+            overallExpertise: overallExpertise,
+            expertisePercentage: Math.round(overallExpertise * 100),
+            progressInLevel: 0,
+            nextLevel: UserStats.EXPERTISE_LEVELS[1],
+            isMaxLevel: false
+        };
+    }
+    
     // Get a detailed expertise summary for analytics/debugging
     getExpertiseSummary(totalVocabularySize = 100) {
         const attemptedWords = this.getAllWordsWithGuesses();
         const coverageRatio = attemptedWords.length / totalVocabularySize;
-        
-        const expertiseLevels = {
-            novice: 0,      // 0.0 - 0.3
-            learning: 0,    // 0.3 - 0.6
-            proficient: 0,  // 0.6 - 0.8
-            expert: 0       // 0.8 - 1.0
-        };
-        
-        attemptedWords.forEach(word => {
-            const expertise = this.getWordExpertise(word);
-            if (expertise < 0.3) expertiseLevels.novice++;
-            else if (expertise < 0.6) expertiseLevels.learning++;
-            else if (expertise < 0.8) expertiseLevels.proficient++;
-            else expertiseLevels.expert++;
-        });
+        const currentLevel = this.getExpertiseLevel(totalVocabularySize);
         
         return {
             overallExpertise: this.getOverallExpertise(totalVocabularySize),
+            currentLevel: currentLevel,
             attemptedWords: attemptedWords.length,
             totalVocabulary: totalVocabularySize,
             coverageRatio: coverageRatio,
-            distribution: expertiseLevels,
             averageAttemptedExpertise: attemptedWords.length > 0 
                 ? attemptedWords.reduce((sum, word) => sum + this.getWordExpertise(word), 0) / attemptedWords.length 
                 : 0

@@ -471,20 +471,34 @@ class FirebaseAuth {
     }
     
     updateStatsDisplay() {
-        const accuracyEl = document.getElementById('accuracyStat');
+        const levelImage = document.getElementById('levelImage');
+        const statItem = levelImage ? levelImage.closest('.stat-item') : null;
         
-        if (accuracyEl) {
+        if (levelImage) {
             // Get actual vocabulary size from vocabulary.js
             const totalVocabularySize = typeof vocabulary !== 'undefined' ? vocabulary.length : 100;
             
-            // Use overall expertise instead of simple accuracy
-            const overallExpertise = this.userStats.getOverallExpertise(totalVocabularySize);
-            const expertisePercentage = Math.round(overallExpertise * 100);
+            // Get current expertise level
+            const levelData = this.userStats.getExpertiseLevel(totalVocabularySize);
             
-            accuracyEl.textContent = `${expertisePercentage}%`;
+            // Update image source and alt text
+            const imageNumber = levelData.level.toString().padStart(2, '0');
+            levelImage.src = `img/${imageNumber}.png`;
+            levelImage.alt = levelData.name;
+            
+            // Update tooltip with level name and progress
+            if (statItem) {
+                const tooltipText = levelData.isMaxLevel 
+                    ? `${levelData.name} (Master Level)`
+                    : `${levelData.name} (${levelData.progressInLevel}% to ${levelData.nextLevel.name})`;
+                statItem.setAttribute('data-tooltip', tooltipText);
+            }
             
             console.log('Stats display updated:', {
-                expertise: `${expertisePercentage}%`,
+                level: levelData.level,
+                name: levelData.name,
+                expertise: `${levelData.expertisePercentage}%`,
+                progress: `${levelData.progressInLevel}%`,
                 vocabularySize: totalVocabularySize
             });
         }
