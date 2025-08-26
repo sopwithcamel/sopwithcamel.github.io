@@ -81,13 +81,13 @@ class UIComponents {
             // Create description based on level - simple snake identity
             let description;
             if (levelData.isMaxLevel) {
-                description = `Congratulations! You are now a ${levelData.name}. You have mastered Kannada learning!`;
+                description = `Congratulations! You are now a ${levelData.name} <strong>(Level ${levelData.level})</strong>. You have mastered Kannada learning!`;
             } else {
                 // Use proper article (a/an) based on first letter
                 const article = ['A', 'E', 'I', 'O', 'U'].includes(levelData.name[0]) ? 'an' : 'a';
-                description = `You are now ${article} ${levelData.name}!`;
+                description = `You are now ${article} ${levelData.name} <strong>(Level ${levelData.level})</strong>!`;
             }
-            modalDescription.textContent = description;
+            modalDescription.innerHTML = description;
             
             // Get mastered words (words with high expertise)
             const masteredWords = this.getMasteredWords(userStats, 0.7); // 70% expertise threshold
