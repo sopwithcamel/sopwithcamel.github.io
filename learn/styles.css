@@ -921,6 +921,7 @@ header h2 {
     height: 32px;
     border-radius: 4px;
     transition: transform 0.2s ease;
+    cursor: pointer;
 }
 
 .level-image:hover {
@@ -1069,5 +1070,170 @@ header h2 {
         padding: 2px 5px;
         font-size: 0.65rem;
         border-radius: 12px;
+    }
+}
+
+/* Snake Level Modal Styles */
+.snake-level-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.snake-level-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.snake-modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 90vh;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    animation: snakeModalSlideIn 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    margin: auto;
+}
+
+@keyframes snakeModalSlideIn {
+    from {
+        transform: translateY(-50px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #666;
+    cursor: pointer;
+    z-index: 10;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close-modal-btn:hover {
+    background: #f0f0f0;
+    color: #333;
+    transform: scale(1.1);
+}
+
+.snake-modal-body {
+    padding: 30px;
+    text-align: center;
+}
+
+.snake-modal-image {
+    width: 200px;
+    height: 200px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+}
+
+.snake-modal-image:hover {
+    transform: scale(1.05);
+}
+
+.snake-modal-body h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.snake-modal-body p {
+    color: #666;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Mobile adjustments for snake modal */
+@media (max-width: 480px) {
+    .snake-modal-content {
+        max-width: 350px;
+        margin: 20px;
+    }
+    
+    .snake-modal-body {
+        padding: 25px 20px;
+    }
+    
+    .snake-modal-image {
+        width: 150px;
+        height: 150px;
+        margin-bottom: 15px;
+    }
+    
+    .snake-modal-body h2 {
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+    }
+    
+    .snake-modal-body p {
+        font-size: 1rem;
+    }
+    
+    .close-modal-btn {
+        top: 10px;
+        right: 15px;
+        font-size: 1.8rem;
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (max-width: 360px) {
+    .snake-modal-content {
+        max-width: 320px;
+    }
+    
+    .snake-modal-body {
+        padding: 20px 15px;
+    }
+    
+    .snake-modal-image {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 12px;
+    }
+    
+    .snake-modal-body h2 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+    
+    .snake-modal-body p {
+        font-size: 0.9rem;
     }
 }

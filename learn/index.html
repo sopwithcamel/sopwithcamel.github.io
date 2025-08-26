@@ -104,6 +104,18 @@
         <button id="logoutBtn" class="btn-small">Logout</button>
     </div>
 
+    <!-- Snake Level Modal -->
+    <div id="snakeLevelModal" class="snake-level-modal" style="display: none;">
+        <div class="snake-modal-content">
+            <button id="closeSnakeModal" class="close-modal-btn">&times;</button>
+            <div class="snake-modal-body">
+                <img id="snakeModalImage" src="img/00.png" alt="Snake Level" class="snake-modal-image">
+                <h2 id="snakeModalTitle">Earthworm</h2>
+                <p id="snakeModalDescription">You're just getting started on your Kannada learning journey!</p>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1>Learn Kannada</h1>
@@ -143,6 +155,7 @@
         <script src="vocabulary.js"></script>
         <script src="consonants.js"></script>
         <script src="user-stats.js"></script>
+        <script src="ui-components.js"></script>
         <script src="firebase-auth.js"></script>
         <script src="script.js"></script>
 </body>
