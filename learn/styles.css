@@ -1178,6 +1178,122 @@ header h2 {
     margin: 0;
 }
 
+/* Snake Modal Slider Styles */
+.snake-slide {
+    width: 100%;
+    min-height: 300px;
+    display: block;
+}
+
+.words-slide h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.words-subtitle {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+.words-list {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.words-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.word-item {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2c3e50;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.word-item:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.no-words {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 40px 20px;
+    font-size: 1.1rem;
+}
+
+.slider-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 30px;
+    background: rgba(0,0,0,0.02);
+    border-top: 1px solid #e9ecef;
+}
+
+.slider-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.slider-btn:hover {
+    background: #5a67d8;
+    transform: scale(1.1);
+}
+
+.slider-btn:active {
+    transform: scale(0.95);
+}
+
+.slide-indicators {
+    display: flex;
+    gap: 8px;
+}
+
+.slide-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.slide-indicator.active {
+    background: #667eea;
+    transform: scale(1.2);
+}
+
 /* Mobile adjustments for snake modal */
 @media (max-width: 480px) {
     .snake-modal-content {

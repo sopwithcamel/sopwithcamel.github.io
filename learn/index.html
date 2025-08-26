@@ -108,10 +108,47 @@
     <div id="snakeLevelModal" class="snake-level-modal" style="display: none;">
         <div class="snake-modal-content">
             <button id="closeSnakeModal" class="close-modal-btn">&times;</button>
-            <div class="snake-modal-body">
-                <img id="snakeModalImage" src="img/00.png" alt="Snake Level" class="snake-modal-image">
-                <h2 id="snakeModalTitle">Earthworm</h2>
-                <p id="snakeModalDescription">You're just getting started on your Kannada learning journey!</p>
+            
+            <!-- Slide 1: Snake Level Display -->
+            <div class="snake-slide-1 snake-slide">
+                <div class="snake-modal-body">
+                    <img id="snakeModalImage" src="img/00.png" alt="Snake Level" class="snake-modal-image">
+                    <h2 id="snakeModalTitle">Earthworm</h2>
+                    <p id="snakeModalDescription">You're just getting started on your Kannada learning journey!</p>
+                </div>
+            </div>
+            
+            <!-- Slide 2: Mastered Words List -->
+            <div class="snake-slide-2 snake-slide" style="display: none;">
+                <div class="snake-modal-body words-slide">
+                    <h2>Mastered Words</h2>
+                    <p class="words-subtitle">Words you've conquered!</p>
+                    <div id="snakeModalWordsList" class="words-list">
+                        <!-- Words will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slide 3: Words Needing Practice -->
+            <div class="snake-slide-3 snake-slide" style="display: none;">
+                <div class="snake-modal-body words-slide">
+                    <h2>Practice These</h2>
+                    <p class="words-subtitle">Words that need more attention!</p>
+                    <div id="snakeModalPracticeList" class="words-list">
+                        <!-- Practice words will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slider Controls -->
+            <div class="slider-controls">
+                <button id="snakeModalPrev" class="slider-btn prev-btn" style="display: none;">‹</button>
+                <div class="slide-indicators">
+                    <div class="slide-indicator active"></div>
+                    <div class="slide-indicator"></div>
+                    <div class="slide-indicator"></div>
+                </div>
+                <button id="snakeModalNext" class="slider-btn next-btn">›</button>
             </div>
         </div>
     </div>
