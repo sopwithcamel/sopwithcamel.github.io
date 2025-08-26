@@ -7,6 +7,8 @@ class UserStats {
             totalAnswers: 0,
             wordGuesses: new Map() // word -> array of {correct: boolean, date: timestamp}
         };
+        // Expertise tracking (not stored, computed from guesses)
+        this.wordExpertise = new Map(); // word -> float (0-1)
     }
     
     // Reset stats to initial values
@@ -17,6 +19,7 @@ class UserStats {
             totalAnswers: 0,
             wordGuesses: new Map()
         };
+        this.wordExpertise = new Map();
         console.log('User stats reset to initial values');
     }
     
@@ -31,6 +34,9 @@ class UserStats {
         
         // Run garbage collection after loading
         this.cleanupOldGuesses();
+        
+        // Compute expertise for all words with guesses
+        this.recomputeAllExpertise();
     }
     
     // Update stats with a new guess
@@ -50,7 +56,10 @@ class UserStats {
             this.stats.correctAnswers++;
         }
         
-        console.log(`Stats updated for word "${word}": ${isCorrect ? 'correct' : 'incorrect'}`);
+        // Update expertise for this word
+        this.updateWordExpertise(word);
+        
+        console.log(`Stats updated for word "${word}": ${isCorrect ? 'correct' : 'incorrect'}, expertise: ${this.wordExpertise.get(word)?.toFixed(3)}`);
     }
     
     // Garbage collect guesses older than 30 days
@@ -79,13 +88,93 @@ class UserStats {
         // Remove words with no recent guesses
         wordsToDelete.forEach(word => {
             this.stats.wordGuesses.delete(word);
+            // Also remove expertise for deleted words
+            this.wordExpertise.delete(word);
         });
         
         if (hasChanges) {
             console.log(`Garbage collection: Removed ${totalRemovedGuesses} old guesses for ${wordsToDelete.length} words`);
+            // Recompute expertise after cleanup since recent guesses may have changed
+            this.recomputeAllExpertise();
         }
         
         return { hasChanges, totalRemovedGuesses, wordsDeleted: wordsToDelete.length };
+    }
+    
+    // Calculate expertise for a single word based on weighted recent performance
+    updateWordExpertise(word) {
+        const guesses = this.getWordGuessHistory(word);
+        if (guesses.length === 0) {
+            this.wordExpertise.delete(word);
+            return;
+        }
+        
+        const expertise = this.calculateWordExpertise(guesses);
+        this.wordExpertise.set(word, expertise);
+    }
+    
+    // Recompute expertise for all words that have guesses
+    recomputeAllExpertise() {
+        this.wordExpertise.clear();
+        for (const word of this.getAllWordsWithGuesses()) {
+            this.updateWordExpertise(word);
+        }
+        console.log(`Recomputed expertise for ${this.wordExpertise.size} words`);
+    }
+    
+    // Calculate expertise score (0-1) based on weighted recent performance
+    calculateWordExpertise(guesses) {
+        if (guesses.length === 0) return 0;
+        
+        const now = Date.now();
+        const oneDay = 24 * 60 * 60 * 1000; // milliseconds in a day
+        
+        let weightedScore = 0;
+        let totalWeight = 0;
+        
+        // Process guesses with time-based weighting (more recent = higher weight)
+        for (const guess of guesses) {
+            const daysAgo = (now - guess.date) / oneDay;
+            
+            // Exponential decay: weight = e^(-daysAgo/7)
+            // This gives recent guesses much higher weight
+            const weight = Math.exp(-daysAgo / 7); // 7-day half-life
+            
+            const score = guess.correct ? 1 : 0;
+            weightedScore += score * weight;
+            totalWeight += weight;
+        }
+        
+        if (totalWeight === 0) return 0;
+        
+        const rawExpertise = weightedScore / totalWeight;
+        
+        // Apply confidence adjustment based on number of attempts
+        // More attempts = more confidence in the score
+        const minAttempts = 3;
+        const confidenceMultiplier = Math.min(1, guesses.length / minAttempts);
+        
+        // For fewer attempts, pull the score toward 0.5 (uncertain)
+        const adjustedExpertise = rawExpertise * confidenceMultiplier + 0.5 * (1 - confidenceMultiplier);
+        
+        // Ensure result is between 0 and 1
+        return Math.max(0, Math.min(1, adjustedExpertise));
+    }
+    
+    // Get expertise for a specific word
+    getWordExpertise(word) {
+        return this.wordExpertise.get(word) || 0;
+    }
+    
+    // Get all words sorted by expertise (lowest to highest - words needing most practice first)
+    getWordsByExpertise() {
+        const words = this.getAllWordsWithGuesses();
+        return words.map(word => ({
+            word,
+            expertise: this.getWordExpertise(word),
+            totalGuesses: this.getTotalGuessesForWord(word),
+            accuracy: this.getWordAccuracy(word)
+        })).sort((a, b) => a.expertise - b.expertise);
     }
     
     // Get current stats object
