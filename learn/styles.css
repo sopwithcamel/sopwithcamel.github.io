@@ -887,8 +887,7 @@ header h2 {
     justify-content: space-between;
     align-items: center;
     backdrop-filter: blur(10px);
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 15px;
     position: relative;
     z-index: 100;
 }
@@ -896,9 +895,9 @@ header h2 {
 .user-info {
     display: flex;
     align-items: center;
-    gap: 15px;
     font-weight: 500;
-    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .user-stats {
@@ -906,12 +905,37 @@ header h2 {
     gap: 15px;
     font-size: 0.9rem;
     opacity: 0.9;
+    flex-shrink: 0;
 }
 
 .stat-item {
     display: flex;
     align-items: center;
     gap: 3px;
+    position: relative;
+    cursor: help;
+}
+
+.stat-item::after {
+    content: "Overall Expertise";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 1000;
+}
+
+.stat-item:hover::after {
+    opacity: 1;
 }
 
 #userDisplay {
@@ -949,7 +973,6 @@ header h2 {
     .user-info {
         flex: 1;
         min-width: 0; /* Allow shrinking */
-        gap: 8px;
         justify-content: flex-start;
     }
     
@@ -958,7 +981,7 @@ header h2 {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 120px; /* Limit username width */
+        max-width: 160px; /* Increased from 120px */
     }
     
     .user-stats {
@@ -991,7 +1014,7 @@ header h2 {
     
     #userDisplay {
         font-size: 0.8rem;
-        max-width: 100px; /* Even smaller on very small screens */
+        max-width: 140px; /* Increased from 100px */
     }
     
     .user-stats {
@@ -1019,7 +1042,7 @@ header h2 {
     
     #userDisplay {
         font-size: 0.75rem;
-        max-width: 80px;
+        max-width: 120px; /* Increased from 80px */
     }
     
     .user-stats {

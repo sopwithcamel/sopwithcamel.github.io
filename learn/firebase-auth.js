@@ -472,18 +472,20 @@ class FirebaseAuth {
     
     updateStatsDisplay() {
         const accuracyEl = document.getElementById('accuracyStat');
-        const wordsEl = document.getElementById('wordsStat');
         
-        if (accuracyEl && wordsEl) {
-            const accuracy = this.userStats.getAccuracy();
-            const wordsLearned = this.userStats.getWordsLearned().length;
+        if (accuracyEl) {
+            // Get actual vocabulary size from vocabulary.js
+            const totalVocabularySize = typeof vocabulary !== 'undefined' ? vocabulary.length : 100;
             
-            accuracyEl.textContent = `${accuracy}%`;
-            wordsEl.textContent = `${wordsLearned}`;
+            // Use overall expertise instead of simple accuracy
+            const overallExpertise = this.userStats.getOverallExpertise(totalVocabularySize);
+            const expertisePercentage = Math.round(overallExpertise * 100);
+            
+            accuracyEl.textContent = `${expertisePercentage}%`;
             
             console.log('Stats display updated:', {
-                accuracy: `${accuracy}%`,
-                words: wordsLearned
+                expertise: `${expertisePercentage}%`,
+                vocabularySize: totalVocabularySize
             });
         }
     }
