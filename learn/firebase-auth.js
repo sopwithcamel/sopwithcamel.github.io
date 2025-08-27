@@ -77,6 +77,18 @@ class FirebaseAuth {
             const { getAI, getGenerativeModel, GoogleAIBackend } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-ai.js');
             let aiConfig = { backend: new GoogleAIBackend() };
 
+            // Check if we're running locally
+            const isLocalhost = window.location.hostname === 'localhost' || 
+                              window.location.hostname === '127.0.0.1' || 
+                              window.location.hostname.startsWith('192.168.') ||
+                              window.location.protocol === 'file:';
+
+            // Set debug token for localhost
+            if (isLocalhost) {
+                self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+                console.log('Local development detected - AppCheck debug token enabled');
+            }
+
             try {
                 // Import AppCheck for production
                 const { getAppCheck, initializeAppCheck, ReCaptchaV3Provider } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app-check.js');
@@ -127,33 +139,6 @@ class FirebaseAuth {
         } catch (error) {
             console.error('Failed to initialize Firebase AI:', error);
             this.generativeModel = null;
-        }
-    }
-
-    // Generate a funny fact about a specific snake
-    async generateSnakeFact(snakeName) {
-        if (!this.generativeModel) {
-            console.warn('AI model not available, returning default fact');
-            return `The ${snakeName} is amazing! Did you know snakes can't blink? They have fixed transparent scales over their eyes instead of eyelids! 🐍`;
-        }
-
-        try {
-            const prompt = `Write a short, funny and interesting fact about the "${snakeName}" snake. 
-            
-            Make it:
-            1. Educational but entertaining
-            2. 1-2 sentences maximum
-            3. Family-friendly and fun
-            4. Include its scientific name
-            
-            Focus on something unique, quirky, or surprising about this specific snake species.`;
-
-            const result = await this.generativeModel.generateContent(prompt);
-            const response = await result.response;
-            return response.text();
-        } catch (error) {
-            console.error('Error generating snake fact:', error);
-            return `The ${snakeName} is fascinating! Fun fact: Snakes smell with their tongues by collecting chemical information from the air! 🐍`;
         }
     }
 
