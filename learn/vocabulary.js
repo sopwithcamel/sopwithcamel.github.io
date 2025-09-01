@@ -80,7 +80,6 @@ const vocabulary = [
     ["pour", "ಹೊಯ್ಯು"],
     ["prayer", "ಪ್ರಾರ್ಥನೆ"],
     ["pride", "ಹೆಮ್ಮೆ"],
-    ["procession", "ಉತ್ಸವ"],
     ["promise", "ಕರಾರು"],
     ["python", "ಹೆಬ್ಬಾವು"],
     ["ragi ball", "ರಾಗಿ ಮುದ್ದೆ"],
