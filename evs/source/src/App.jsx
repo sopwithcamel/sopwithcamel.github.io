@@ -279,6 +279,20 @@ const LEVELS = [
         themeColor: "from-emerald-900 to-emerald-600",
         imageText: "Slytherin",
         row: 6, col: 1, // Draco
+    },
+    {
+        id: 9,
+        characterName: "Luna Lovegood",
+        themeColor: "from-pink-900 to-pink-600",
+        imageText: "Ravenclaw Dreamer",
+        row: 1, col: 2, // Luna
+    },
+    {
+        id: 10,
+        characterName: "Neville Longbottom",
+        themeColor: "from-amber-900 to-amber-600",
+        imageText: "Gryffindor Hero",
+        row: 2, col: 4, // Neville
     }
 ];
 
