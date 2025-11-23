@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Star, CheckCircle, XCircle, ArrowRight, Trophy, HelpCircle, RefreshCw, Lock, Upload, Image as ImageIcon } from 'lucide-react';
+import { Star, CheckCircle, XCircle, ArrowRight, Trophy, HelpCircle, RefreshCw, Lock } from 'lucide-react';
 
 // --- CONFIGURATION ---
 
@@ -334,13 +334,7 @@ export default function App() {
         }
     }, [currentLevelIdx, allQuestions]);
 
-    const handleImageUpload = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setGridImage(imageUrl);
-        }
-    };
+
 
     const handleTileClick = (index) => {
         if (revealedTiles.includes(index)) return;
@@ -430,21 +424,11 @@ export default function App() {
                             <span className="text-yellow-400 text-3xl">⚡</span>
                             Potter Quiz
                         </h1>
-                        {/* Mobile Upload Button */}
-                        <label className="md:hidden flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded cursor-pointer transition-colors border border-slate-600 text-slate-300">
-                            <Upload className="w-4 h-4" />
-                            <span>Upload Grid</span>
-                            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                        </label>
+
                     </div>
 
                     <div className="flex items-center gap-4 text-sm font-medium text-slate-300">
-                        {/* Desktop Upload Button */}
-                        <label className="hidden md:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded cursor-pointer transition-colors border border-slate-600 text-slate-300 mr-4">
-                            <ImageIcon className="w-4 h-4" />
-                            <span>Missing Images? Upload Grid</span>
-                            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                        </label>
+
 
                         <span className="bg-slate-800 px-3 py-1 rounded-lg border border-slate-700">Level {currentLevelIdx + 1} / {LEVELS.length}</span>
                         <div className="flex items-center gap-1 text-yellow-400 font-bold">
