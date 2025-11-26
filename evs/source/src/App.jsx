@@ -285,14 +285,14 @@ const LEVELS = [
         characterName: "Luna Lovegood",
         themeColor: "from-pink-900 to-pink-600",
         imageText: "Ravenclaw Dreamer",
-        row: 1, col: 2, // Luna
+        row: 5, col: 2, // Luna
     },
     {
         id: 10,
         characterName: "Neville Longbottom",
         themeColor: "from-amber-900 to-amber-600",
         imageText: "Gryffindor Hero",
-        row: 2, col: 4, // Neville
+        row: 7, col: 2, // Neville
     }
 ];
 
